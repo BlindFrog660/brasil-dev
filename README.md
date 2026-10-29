@@ -1,0 +1,13 @@
+# Brasil em Desenvolvimento v6
+
+Energia ONS: valores horários de intercâmbio em MWmed no mapa e no contexto Jarvis. Snapshot incorporado ao HTML para funcionar em file://. Pontos ilustrativos de fronteira; não representam usinas. Não mede geração de Itaipu. Sinal mantido como publicado, sem inferir direção. Fonte CC-BY: https://dados.ons.org.br/dataset/intercambio-internacional
+
+Atualização diária às 06:30 de Brasília pelo workflow Atualizar energia ONS. Em caso de erro, permanece o snapshot anterior: observe a data no painel. Execute manualmente na primeira vez. Requer permissão de escrita; proteção de branch pode impedir commits. Commits automáticos não disparam Testar site: rode manualmente para validar.
+
+GitHub: envie esta pasta para o repositório público brasil-dev, incluindo .github. Em Settings → Secrets and variables → Actions, cadastre GEMINI_API_KEY. Nunca coloque a chave no código ou no chat. Execute Actions → Testar site e baixe o artefato relatorio. Sem chave, desmarque usar_gemini. Relatórios não sobrescrevem mais a branch reports.
+
+Para publicar: Settings → Pages → Deploy from a branch → main → / (root). O Secret não é publicado no HTML; no site cada usuário fornece sua própria chave no navegador. Uso sujeito às cotas gratuitas do Google.
+
+Testes locais: Node 22+, npm install, npx playwright install chromium, npm test. Windows/Edge: BROWSER_CHANNEL=msedge. Atualizador: node scripts/update-energy.js.
+
+Validação: 14 passos aprovados em Edge real nos modos file:// e HTTP. Gemini depende de Secret; criação do repositório e execução remota dependem de autenticação GitHub.
