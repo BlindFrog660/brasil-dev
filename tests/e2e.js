@@ -125,7 +125,7 @@ async function cenario(browser, nome, url, gem, slug) {
   });
 
   if (gem) {
-    await passo("Preencher a chave do Gemini", async () => { await page.fill("#key", KEY); });
+    await passo("Preencher a chave do Gemini", async () => { await ev(() => { document.querySelector("details").open = true; }); await page.fill("#key", KEY); });
     await passo("Teste de velocidade da API (botão da página)", async () => {
       await ev(() => { document.querySelector("details").open = true; });
       await page.click("#test");
@@ -214,5 +214,6 @@ function escrever() {
     if (browser) await browser.close().catch(() => {});
     if (srv) srv.close();
     escrever();
+    console.log(relatorio());
   }
 })();
