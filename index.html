@@ -42,7 +42,7 @@ ul{margin:6px 0 0;padding-left:18px;font-size:.88rem}
 </style>
 </head>
 <body>
-<header><h1>Brasil em Desenvolvimento</h1><span>Protótipo v6: IBGE, energia ONS e agente Jarvis</span></header>
+<header><h1>Brasil em Desenvolvimento</h1><span>Protótipo v6.1: IBGE, energia ONS e agente Jarvis</span></header>
 <div id="map" role="application" aria-label="Mapa interativo do Brasil"></div>
 <aside>
   <section class="box" id="info" aria-live="polite">
@@ -62,7 +62,7 @@ ul{margin:6px 0 0;padding-left:18px;font-size:.88rem}
     <details><summary>Conectar IA gratuita (Gemini)</summary>
       <input id="key" type="password" placeholder="Chave da API do Google AI Studio" aria-label="Chave da API">
       <input id="model" value="gemini-flash-lite-latest" aria-label="Modelo">
-      <select id="think" aria-label="Raciocínio do modelo"><option value="">Raciocínio: padrão do modelo</option><option value="level">Raciocínio: baixo (thinkingLevel)</option><option value="budget">Raciocínio: desligado (thinkingBudget 0)</option></select>
+      <select id="think" aria-label="Raciocínio do modelo"><option value="">Raciocínio: padrão do modelo</option><option value="level">Raciocínio: baixo (thinkingLevel)</option></select>
       <button id="test" type="button" class="alt" style="margin-top:6px">Testar velocidade da API</button>
       <div class="small">A chave fica só neste navegador. Sem ela, o Jarvis responde apenas com os dados do mapa.</div></details>
   </section>
@@ -182,6 +182,7 @@ async function ask(q,quiet){
   if(busy){say("Ainda estou processando o pedido anterior, senhor.");return}
   if(!quiet)say(q,"u");
   const qfocus=quiet||(()=>{const ids=statesIn(q,4);return ids.length&&focusStates(ids)})();
+  if(/\b(pib|produto interno bruto)\b/i.test(q)&&!Object.keys(pibs).length){say("O IBGE está indisponível nesta conexão. Não tenho um PIB verificado para informar agora, senhor.");return}
   const key=$("key").value.trim();
   if(!key){
     say(sel?context()+"Para análises mais profundas, conecte a chave gratuita do Gemini no painel abaixo, senhor.":"Selecione um estado no mapa ou conecte a chave gratuita do Gemini para conversarmos livremente.");
@@ -189,7 +190,7 @@ async function ask(q,quiet){
   busy=true;$("status").textContent="Processando…";$("diag").textContent="";
   const sys="Você é o Jarvis, assistente do usuário (chame-o de senhor), formal, preciso e levemente irônico. Foco: desenvolvimento do Brasil com base na geografia e integração com a América Latina. Responda em português, de forma objetiva. Seja conciso: no máximo 120 palavras, salvo se pedirem mais. Diga quando não tiver certeza e não invente dados. Quando a resposta tratar de um lugar específico (cidade, porto, usina, fronteira, país vizinho), termine com uma última linha exata no formato [[MAPA: latitude; longitude; zoom; rótulo curto]], com coordenadas reais aproximadas e zoom de 4 a 11; omita a linha se não tiver certeza das coordenadas ou se a pergunta for geral. PIB por estado (IBGE): "+Object.entries(pibs).map(([i,p])=>names[i]+" "+fmt(p.v)+" em "+p.ano).join("; ")+". "+context()+"Projetos criados: "+projects.map(p=>p.t+" ("+p.uf+")").join("; ");
   const th=$("think").value,first=$("model").value.trim();
-  const chain=[first,"gemini-flash-lite-latest","gemini-2.5-flash-lite"].filter((m,i,a)=>m&&a.indexOf(m)===i);
+  const chain=[first,"gemini-flash-lite-latest","gemini-3.1-flash-lite"].filter((m,i,a)=>m&&a.indexOf(m)===i);
   const t0=performance.now(),sec=()=>((performance.now()-t0)/1000).toFixed(1)+" s",fails=[];
   let res=null,netErr=null;
   for(const m of chain){
@@ -252,7 +253,7 @@ async function speedTest(){
   };
   await run(cur+" padrão",cur,null);
   await run(cur+" thinkingLevel low",cur,{thinkingConfig:{thinkingLevel:"low"}});
-  await run(cur+" thinkingBudget 0",cur,{thinkingConfig:{thinkingBudget:0}});
+
   if(flashLite)await run(flashLite+" padrão",flashLite,null);
   say(rep.join("\n"),"j",true);
   $("status").textContent=OK;$("test").disabled=false;busy=false;
