@@ -145,7 +145,13 @@ async function cenario(browser, nome, url, gem, slug) {
     const ruim = r => /^(A API|Falha|Nenhum modelo|Ainda estou)/.test(r.resp);
     const dist = (a, b) => Math.hypot(a.lat - b[0], a.lng - b[1]);
 
-    await passo("Jarvis responde com dados do IBGE", async () => {
+    await passo("Jarvis usa PIB carregado ou informa indisponibilidade", async () => {
+      if(await ev(()=>Object.keys(pibs).length===0)) {
+        await page.fill("#q","Qual o PIB de São Paulo?"); await page.click("#cf button");
+        const reply=await ev(()=>[...document.querySelectorAll("#log .m.j")].pop().textContent);
+        if(!reply.includes("Não tenho um PIB verificado")) throw new Error("Jarvis informou PIB sem fonte");
+        return "IBGE indisponível: Jarvis recusou informar PIB sem verificação.";
+      }
       const r = await perguntar("Qual o PIB de São Paulo e de que ano é o dado? Responda em 2 frases.");
       const d = r.diag + "\nResposta: " + r.resp;
       return ruim(r) ? { falhou: true, detalhe: d } : d;
