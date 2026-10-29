@@ -11,3 +11,8 @@ Para publicar: Settings → Pages → Deploy from a branch → main → / (root)
 Testes locais: Node 22+, npm install, npx playwright install chromium, npm test. Windows/Edge: BROWSER_CHANNEL=msedge. Atualizador: node scripts/update-energy.js.
 
 Validação: 14 passos aprovados em Edge real nos modos file:// e HTTP. Gemini depende de Secret; criação do repositório e execução remota dependem de autenticação GitHub.
+
+## Versão 8
+Projetos salvos no navegador, com exportação/importação JSON (até 100 projetos, 500 KB por arquivo). A exportação não contém chave Gemini. Limpar dados do navegador pode apagar projetos: exporte cópias. Arquivos locais e site HTTP têm armazenamento separado.
+
+Cópia oficial IBGE embutida no HTML, coletada em 29/10/2026: estados, malha UF mínima e agregado 5938/variável 37. Em caso de falha online, a interface identifica a coleta; o PIB continua mostrando seu ano de referência. Uma resposta online completa atualiza a cópia neste navegador. Dados de segurança não são dados em tempo real.

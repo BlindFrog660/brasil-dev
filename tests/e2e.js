@@ -124,6 +124,36 @@ async function cenario(browser, nome, url, gem, slug) {
     return o.panel;
   });
 
+  await passo("Cópia oficial funciona com IBGE bloqueado", async () => {
+    await page.route("https://servicodados.ibge.gov.br/**", r=>r.abort());
+    await page.reload({waitUntil:"domcontentloaded"});
+    await page.waitForFunction(()=>typeof geo!=="undefined"&&geo&&Object.keys(layers).length===27);
+    const data=await ev(()=>({backup:ibgeBackup,year:pibs["35"].ano,value:pibs["35"].v}));
+    if(!data.backup||data.value<=0)throw new Error("Cópia IBGE inválida");
+    return `27 estados; PIB de referência ${data.year}; cópia explicitamente identificada.`;
+  });
+  await passo("Projetos sobrevivem ao recarregamento e podem ser exportados", async () => {
+    await ev(()=>layers["35"].fire("click",{latlng:layers["35"].getBounds().getCenter()}));
+    await page.fill("#ptitle","Projeto de teste persistente");await page.click("#pf button");
+    await page.reload({waitUntil:"domcontentloaded"});
+    await page.waitForFunction(()=>typeof geo!=="undefined"&&geo);
+    const saved=await ev(()=>({n:projects.length,t:projects[0]?.t,markers:projectMarkers.getLayers().length}));
+    if(saved.n!==1||saved.t!=="Projeto de teste persistente"||saved.markers!==1)throw new Error("Projeto não restaurado");
+    const downloadPromise=page.waitForEvent("download");await page.click("#export-projects");const download=await downloadPromise;
+    const doc=JSON.parse(fs.readFileSync(await download.path(),"utf8"));if(doc.version!==1||doc.projects.length!==1||JSON.stringify(doc).includes(KEY)&&KEY)throw new Error("Exportação inválida");
+    return "Projeto e marcador restaurados; JSON exportado sem credenciais.";
+  });
+  await passo("Importação inválida não apaga projetos", async()=>{
+    await page.locator("#project-file").setInputFiles({name:"invalido.json",mimeType:"application/json",buffer:Buffer.from('{"version":1,"projects":[{"t":"inválido"}]}')});
+    await page.waitForFunction(()=>document.getElementById("project-status").textContent.includes("recusada"));
+    if(await ev(()=>projects.length)!==1)throw new Error("Importação alterou projetos existentes");
+    const doc=await ev(()=>JSON.stringify({version:1,projects}));
+    await page.locator("#project-file").setInputFiles({name:"valido.json",mimeType:"application/json",buffer:Buffer.from(doc)});
+    await page.waitForFunction(()=>!document.getElementById("project-status").textContent.includes("recusada"));
+    if(await ev(()=>projects.length)!==1)throw new Error("Importação duplicou o projeto");
+    return "Arquivo inválido recusado; reimportação válida sem duplicação.";
+  });
+
   if (gem) {
     await passo("Preencher a chave do Gemini", async () => { await ev(() => { document.getElementById("ai-settings").open = true; }); await page.fill("#key", KEY); });
     await passo("Teste de velocidade da API (botão da página)", async () => {

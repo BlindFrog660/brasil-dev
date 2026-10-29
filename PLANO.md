@@ -1,6 +1,6 @@
 # Brasil em Desenvolvimento — situação e próximos passos
 
-## Entregue na versão 7
+## Entregue até a versão 8
 
 - Painel territorial responsivo, mapa em destaque, indicadores e Jarvis organizados.
 - Voz gratuita do navegador: preferência por vozes naturais em português quando disponíveis, seletor, velocidade, leitura por frases, amostra e interrupção.
@@ -14,8 +14,8 @@
 2. **Economia real:** indústria, agropecuária e serviços, emprego, produção e comércio exterior por território, com ano e unidade.
 3. **Infraestrutura:** capacidade instalada por UF, transportes, combustíveis e corredores de integração latino-americanos. O intercâmbio ONS atual não representa geração de Itaipu.
 4. **Legislação:** fontes da Câmara, Senado e Planalto; distinguir projeto, norma vigente e situação de tramitação.
-5. **Projetos persistentes:** hoje a lista é temporária; faltam salvar/restaurar, exportar, comparar cenários, objetivos, orçamento estimado e indicadores de acompanhamento.
-6. **Dados resilientes:** cópia verificável das malhas e indicadores do IBGE, atualização com histórico e indicação de dados antigos. O servidor do GitHub não conseguiu alcançar o IBGE nas execuções anteriores.
+5. **Planejamento de projetos:** salvar/restaurar e exportar/importar já disponíveis. Faltam comparar cenários, objetivos, orçamento estimado e indicadores de acompanhamento.
+6. **Dados resilientes:** cópia verificável do IBGE incorporada e indicação de uso de segurança disponíveis. Falta atualização com histórico centralizado.
 7. **Publicação e uso:** conferir GitHub Pages e endereço público; validar acessibilidade, mapa móvel e controles de voz. Secret só é usado nos testes, não é entregue ao navegador.
 
 ## Ordem sugerida
