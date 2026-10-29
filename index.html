@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brasil em Desenvolvimento · protótipo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<style>
+:root{--bg:#e9eee8;--panel:#f7f9f5;--ink:#13222b;--mute:#5a6b73;--green:#0b5d3b;--blue:#16408f;--yellow:#f2c230;--line:#cfd8d0;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a1f;--panel:#17262d;--ink:#e6efe9;--mute:#9db0b6;--green:#4fc08a;--blue:#7fa8ff;--yellow:#f2c230;--line:#2a3d45;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto 1fr;gap:12px;padding:12px}
+header{grid-column:1/-1;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.02em}
+header span{color:var(--mute);font-size:.9rem}
+#map{border-radius:10px;border:1px solid var(--line);min-height:420px}
+aside{display:flex;flex-direction:column;gap:12px;min-height:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+#jarvis{display:flex;flex-direction:column;gap:8px;flex:1;min-height:300px}
+#orbwrap{display:flex;align-items:center;gap:12px}
+canvas{width:84px;height:84px;flex:none}
+#log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;font-size:.92rem;line-height:1.45;min-height:120px}
+.m{padding:8px 10px;border-radius:8px;max-width:92%;white-space:pre-wrap}
+.j{background:color-mix(in srgb,var(--blue) 14%,transparent);align-self:flex-start}
+.u{background:color-mix(in srgb,var(--yellow) 30%,transparent);align-self:flex-end}
+form{display:flex;gap:6px}
+input,button,select{font:inherit;border-radius:8px;border:1px solid var(--line);padding:8px 10px;background:var(--bg);color:var(--ink)}
+input{flex:1;min-width:0}
+button{cursor:pointer;background:var(--green);color:#fff;border-color:var(--green);font-weight:600}
+button.alt{background:transparent;color:var(--ink);border-color:var(--line);font-weight:400}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+h2{font-size:1rem;margin:0 0 6px}
+.big{font-size:1.6rem;font-weight:800;color:var(--green)}
+.small{color:var(--mute);font-size:.82rem}
+#voice{white-space:nowrap}
+details{margin-top:6px;font-size:.85rem}
+details input,details select{width:100%;margin-top:4px}
+ul{margin:6px 0 0;padding-left:18px;font-size:.88rem}
+@media (max-width:860px){body{grid-template-columns:1fr;grid-template-rows:auto 420px auto;height:auto}}
+</style>
+</head>
+<body>
+<header><h1>Brasil em Desenvolvimento</h1><span>Protótipo v6: IBGE, energia ONS e agente Jarvis</span></header>
+<div id="map" role="application" aria-label="Mapa interativo do Brasil"></div>
+<aside>
+  <section class="box" id="info" aria-live="polite">
+    <h2 id="uf">Clique em um estado</h2>
+    <div class="big" id="pib">–</div>
+    <div class="small" id="pibsub">PIB a preços correntes (IBGE/SIDRA)</div>
+    <form id="pf" style="margin-top:8px"><input id="ptitle" placeholder="Nome do projeto neste local" aria-label="Nome do projeto"><button>Criar projeto</button></form>
+    <ul id="plist"></ul>
+    <h2 style="margin-top:12px">Energia · ONS</h2><div id="energy" class="small"></div>
+  </section>
+  <section class="box" id="jarvis">
+    <div id="orbwrap"><canvas id="orb" width="168" height="168" aria-hidden="true"></canvas>
+      <div><h2 style="margin:0">Jarvis</h2><div class="small" id="status">Pronto para ajudar, senhor.</div><div class="small" id="diag" aria-live="off"></div></div>
+      <button class="alt" id="voice" type="button" style="margin-left:auto" aria-pressed="false">Voz: off</button></div>
+    <div id="log"></div>
+    <form id="cf"><input id="q" placeholder="Pergunte algo ao Jarvis" aria-label="Pergunta"><button>Enviar</button></form>
+    <details><summary>Conectar IA gratuita (Gemini)</summary>
+      <input id="key" type="password" placeholder="Chave da API do Google AI Studio" aria-label="Chave da API">
+      <input id="model" value="gemini-flash-lite-latest" aria-label="Modelo">
+      <select id="think" aria-label="Raciocínio do modelo"><option value="">Raciocínio: padrão do modelo</option><option value="level">Raciocínio: baixo (thinkingLevel)</option><option value="budget">Raciocínio: desligado (thinkingBudget 0)</option></select>
+      <button id="test" type="button" class="alt" style="margin-top:6px">Testar velocidade da API</button>
+      <div class="small">A chave fica só neste navegador. Sem ela, o Jarvis responde apenas com os dados do mapa.</div></details>
+  </section>
+</aside>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const store={get:k=>{try{return localStorage.getItem(k)||""}catch(e){return ""}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const IBGE="https://servicodados.ibge.gov.br/api/";
+let pibs={},names={},sel=null,projects=[],speaking=false,voiceOn=false;
+
+/* ---------- mapa ---------- */
+const map=L.map("map").setView([-14.2,-51.9],4);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:14,attribution:"Tiles © Esri"}).addTo(map);
+const fmt=v=>"R$ "+(v/1e6).toFixed(1).replace(".",",")+" bi";
+const color=v=>v>5e8?"#0b5d3b":v>2e8?"#2f8a5f":v>1e8?"#6fb48d":v>5e7?"#b4d8c2":"#e1efe6";
+let geo,mark=null,focusNames="";const layers={};
+function style(f){const p=pibs[f.properties.codarea];return{weight:1,color:"#3d5560",fillOpacity:.65,fillColor:p?color(p.v):"#ccc"}}
+function select(f,latlng){
+  geo&&geo.eachLayer(x=>geo.resetStyle(x));focusNames="";
+  const id=f.properties.codarea,p=pibs[id];
+  sel={id,nome:names[id]||id,latlng,pib:p};
+  $("uf").textContent=sel.nome;
+  $("pib").textContent=p?fmt(p.v):"sem dados";
+  $("pibsub").textContent=p?"PIB "+p.ano+" a preços correntes (IBGE/SIDRA)":"Não foi possível carregar o PIB";
+}
+async function load(){
+  try{
+    const [est,g,pib]=await Promise.all([
+      fetch(IBGE+"v1/localidades/estados").then(r=>r.json()),
+      fetch(IBGE+"v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&qualidade=minima&intrarregiao=UF").then(r=>r.json()),
+      fetch(IBGE+"v3/agregados/5938/periodos/-1/variaveis/37?localidades=N3[all]").then(r=>r.json())]);
+    est.forEach(e=>names[String(e.id)]=e.nome+" ("+e.sigla+")");
+    pib[0].resultados[0].series.forEach(s=>{const a=Object.keys(s.serie).pop();pibs[s.localidade.id]={v:+s.serie[a],ano:a}});
+    geo=L.geoJSON(g,{style,onEachFeature:(f,l)=>{layers[f.properties.codarea]=l;l.on("click",e=>{clearMark();select(f,e.latlng)})}}).addTo(map);
+    say("Dados do IBGE carregados, senhor. Clique em um estado e pergunte o que quiser.");
+  }catch(e){say("Não consegui acessar o IBGE agora. Verifique a conexão e recarregue a página.")}
+}
+
+/* ---------- foco do mapa (segue a pergunta ao Jarvis) ---------- */
+const norm=t=>t.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const reduced=()=>matchMedia("(prefers-reduced-motion:reduce)").matches;
+function clearMark(){if(mark){mark.remove();mark=null}}
+function statesIn(text,max){
+  const found=[],tn=" "+norm(text).replace(/[^a-z0-9]+/g," ")+" ";let rest=tn;
+  const list=Object.entries(names).filter(([id])=>id!=="15").map(([id,n])=>{const m=n.match(/^(.*) \(\w+\)$/);return{id,nome:norm(m?m[1]:n)}})
+    .concat([{id:"53",nome:"brasilia"}]).sort((a,b)=>b.nome.length-a.nome.length);
+  for(const e of list){const k=" "+e.nome+" ";if(rest.includes(k)){found.push({id:e.id,pos:tn.indexOf(k)});rest=rest.split(k).join(" ")}}
+  /* "para" é preposição: só conta como Pará com acento ou depois de do/da/no/na/em/pelo */
+  const pm=text.match(/(^|\s)(pará|(d[oa]|n[oa]|em|pelo)\s+para)(?=$|[\s.,;:!?)])/i);
+  if(pm&&names["15"])found.push({id:"15",pos:(" "+norm(text.slice(0,pm.index)).replace(/[^a-z0-9]+/g," ")).length});
+  return found.length&&found.length<=max?found.sort((a,b)=>a.pos-b.pos).map(f=>f.id):[];
+}
+function focusStates(ids){
+  const ls=ids.map(i=>layers[i]).filter(Boolean);if(!ls.length)return false;
+  clearMark();
+  const b=L.featureGroup(ls).getBounds();
+  select(ls[0].feature,b.getCenter());
+  ls.forEach(l=>{l.setStyle({weight:3,color:"#f2c230"});l.bringToFront()});
+  if(ids.length>1)focusNames=ids.map(i=>names[i]).join(", ");
+  if(reduced())map.fitBounds(b,{padding:[30,30]});else map.flyToBounds(b,{padding:[30,30],duration:1.2});
+  return true;
+}
+function placeMark(lat,lon,z,label){
+  clearMark();
+  mark=L.circleMarker([lat,lon],{radius:9,color:"#f2c230",weight:3,fillColor:"#16408f",fillOpacity:.7}).addTo(map);
+  if(label)mark.bindTooltip(label.replace(/&/g,"&amp;").replace(/</g,"&lt;"),{permanent:true,direction:"top",offset:[0,-8]});
+  if(reduced())map.setView([lat,lon],z);else map.flyTo([lat,lon],z,{duration:1.2});
+}
+/* o Jarvis termina a resposta com [[MAPA: lat; lon; zoom; rótulo]] quando fala de um lugar específico */
+function mapTag(raw,move){
+  const m=raw.match(/\[\[\s*MAPA\s*:\s*(-?[\d.,]+)\s*;\s*(-?[\d.,]+)\s*;\s*(\d+)\s*;?\s*([^\]]*)\]\]/i);
+  const clean=raw.replace(/\[\[\s*MAPA[^\]]*\]\]/gi,"").trim();
+  if(!m)return{clean,ok:false};
+  const lat=parseFloat(m[1].replace(",",".")),lon=parseFloat(m[2].replace(",",".")),z=Math.max(3,Math.min(11,+m[3]));
+  if(!(lat>=-56&&lat<=33&&lon>=-118&&lon<=-30))return{clean,ok:false};
+  if(move)placeMark(lat,lon,z,m[4].trim());
+  return{clean,ok:move};
+}
+
+
+/* ENERGY_DATA_START */
+const energyData={"source":"https://ons-aws-prod-opendata.s3.amazonaws.com/dataset/intercambio_internacional_ho/INTERCAMBIO_INTERNACIONAL_2026.csv","retrievedAt":"2026-10-29T05:35:41.552Z","unit":"MWmed","records":[{"country":"Argentina","time":"2026-10-27 23:00:00","value":-2.848},{"country":"Uruguai","time":"2026-10-27 23:00:00","value":0}]};
+/* ENERGY_DATA_END */
+function energyContext(){return "Intercâmbio internacional ONS (MWmed, fluxo medido; não é capacidade instalada nem geração de Itaipu): "+energyData.records.map(r=>r.country+": "+r.value+" MWmed em "+r.time).join("; ")+". Fonte: "+energyData.source+". Os sinais são os publicados pela ONS; não deduza importação ou exportação sem consultar o dicionário. ";}
+function loadEnergy(){
+  const box=$("energy");
+  box.textContent=energyData.records.map(r=>r.country+": "+r.value.toLocaleString("pt-BR")+" MWmed · "+r.time).join(" | ");
+  const a=document.createElement("a");a.href="https://dados.ons.org.br/dataset/intercambio-internacional";a.textContent=" Fonte: ONS · dados horários sujeitos a revisão";a.target="_blank";a.rel="noopener";box.append(a);
+  const points={Argentina:[-29.5,-57.2],Uruguai:[-32.5,-55.5],Paraguai:[-25.5,-54.7]};
+  const energyLayer=L.layerGroup();
+  energyData.records.forEach(r=>{if(!points[r.country])return;const text=r.country+" · "+r.value+" MWmed · "+r.time+" · ONS. Localização ilustrativa da fronteira; não representa uma usina.";L.circleMarker(points[r.country],{radius:8,color:"#b15b16",fillOpacity:.8}).bindTooltip(text).addTo(energyLayer)});
+  energyLayer.addTo(map);L.control.layers(null,{"Intercâmbio internacional · ONS":energyLayer}).addTo(map);
+}
+
+/* ---------- projetos ---------- */
+$("pf").onsubmit=e=>{e.preventDefault();
+  if(!sel){say("Escolha primeiro um local no mapa, senhor.");return}
+  const t=$("ptitle").value.trim();if(!t)return;
+  const pr={t,uf:sel.nome,ll:sel.latlng};projects.push(pr);
+  L.marker(sel.latlng).addTo(map).bindPopup("<b>"+t.replace(/</g,"&lt;")+"</b><br>"+sel.nome);
+  const li=document.createElement("li");li.textContent=t+" · "+sel.nome;$("plist").appendChild(li);
+  $("ptitle").value="";
+  ask("Monte uma proposta inicial para o projeto \""+t+"\" em "+sel.nome+": objetivo, infraestrutura necessária, integração com países vizinhos e riscos.",true);
+};
+
+/* ---------- Jarvis ---------- */
+function say(t,cls="j",mute){const d=document.createElement("div");d.className="m "+cls;d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9;
+  if(cls==="j"&&voiceOn&&!mute&&"speechSynthesis"in window){const u=new SpeechSynthesisUtterance(t);u.lang="pt-BR";u.onstart=()=>speaking=true;u.onend=()=>speaking=false;speechSynthesis.speak(u)}}
+$("voice").onclick=()=>{voiceOn=!voiceOn;$("voice").textContent="Voz: "+(voiceOn?"on":"off");$("voice").setAttribute("aria-pressed",voiceOn);if(!voiceOn&&"speechSynthesis"in window)speechSynthesis.cancel()};
+$("key").value=store.get("gk");$("key").onchange=()=>store.set("gk",$("key").value);
+$("model").value=store.get("gm")||$("model").value;$("model").onchange=()=>store.set("gm",$("model").value.trim());
+function context(){return energyContext()+(sel?"Local selecionado: "+sel.nome+(sel.pib?"; PIB "+sel.pib.ano+": "+fmt(sel.pib.v):"")+". "+(focusNames?"Estados em foco no mapa: "+focusNames+". ":""):"Nenhum local selecionado. ")}
+let busy=false,hist=[];
+const OK="Pronto para ajudar, senhor.";
+async function ask(q,quiet){
+  if(busy){say("Ainda estou processando o pedido anterior, senhor.");return}
+  if(!quiet)say(q,"u");
+  const qfocus=quiet||(()=>{const ids=statesIn(q,4);return ids.length&&focusStates(ids)})();
+  const key=$("key").value.trim();
+  if(!key){
+    say(sel?context()+"Para análises mais profundas, conecte a chave gratuita do Gemini no painel abaixo, senhor.":"Selecione um estado no mapa ou conecte a chave gratuita do Gemini para conversarmos livremente.");
+    return}
+  busy=true;$("status").textContent="Processando…";$("diag").textContent="";
+  const sys="Você é o Jarvis, assistente do usuário (chame-o de senhor), formal, preciso e levemente irônico. Foco: desenvolvimento do Brasil com base na geografia e integração com a América Latina. Responda em português, de forma objetiva. Seja conciso: no máximo 120 palavras, salvo se pedirem mais. Diga quando não tiver certeza e não invente dados. Quando a resposta tratar de um lugar específico (cidade, porto, usina, fronteira, país vizinho), termine com uma última linha exata no formato [[MAPA: latitude; longitude; zoom; rótulo curto]], com coordenadas reais aproximadas e zoom de 4 a 11; omita a linha se não tiver certeza das coordenadas ou se a pergunta for geral. PIB por estado (IBGE): "+Object.entries(pibs).map(([i,p])=>names[i]+" "+fmt(p.v)+" em "+p.ano).join("; ")+". "+context()+"Projetos criados: "+projects.map(p=>p.t+" ("+p.uf+")").join("; ");
+  const th=$("think").value,first=$("model").value.trim();
+  const chain=[first,"gemini-flash-lite-latest","gemini-2.5-flash-lite"].filter((m,i,a)=>m&&a.indexOf(m)===i);
+  const t0=performance.now(),sec=()=>((performance.now()-t0)/1000).toFixed(1)+" s",fails=[];
+  let res=null,netErr=null;
+  for(const m of chain){
+    const body={systemInstruction:{parts:[{text:sys}]},contents:hist.concat([{role:"user",parts:[{text:q}]}])};
+    if(th&&m===first)body.generationConfig={thinkingConfig:th==="level"?{thinkingLevel:"low"}:{thinkingBudget:0}};
+    const last=m===chain[chain.length-1];
+    try{
+      const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(m)+":generateContent",
+        {method:"POST",signal:AbortSignal.timeout(20000),headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(body)});
+      const txt=await r.text();let j={};try{j=JSON.parse(txt)}catch(e){}
+      if([429,500,503,504].includes(r.status)&&!last){fails.push(m+" HTTP "+r.status);continue}
+      res={r,txt,j,m};break;
+    }catch(e){
+      if(e.name==="TimeoutError"&&!last){fails.push(m+" sem resposta em 20 s");continue}
+      netErr=e;break}
+  }
+  const falhas=fails.length?" · falhas antes: "+fails.join("; "):"";
+  if(res){
+    const {r,txt,j,m}=res,u=j.usageMetadata||{},n=v=>v??"?";
+    $("diag").textContent="Diagnóstico: "+m+" · "+sec()+" no total · prompt "+sys.length+" car. · tokens (entrada/saída/raciocínio): "+n(u.promptTokenCount)+"/"+n(u.candidatesTokenCount)+"/"+n(u.thoughtsTokenCount)+falhas;
+    const raw=j.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join(""),mt=raw?mapTag(raw,!quiet):null,out=mt?mt.clean:"";
+    if(out){hist.push({role:"user",parts:[{text:q}]},{role:"model",parts:[{text:out}]});hist=hist.slice(-8);say(out);if(!qfocus&&!mt.ok){const ids=statesIn(out,3);if(ids.length)focusStates(ids)}}
+    else if(!r.ok)say("A API respondeu HTTP "+r.status+(r.status===429?" (limite gratuito atingido; aguarde um minuto)":"")+": "+(j.error?.message||txt.slice(0,160)||"sem detalhes"));
+    else say("A API não devolveu texto, senhor"+(j.promptFeedback?.blockReason?" (bloqueado: "+j.promptFeedback.blockReason+")":j.candidates?.[0]?.finishReason?" (motivo: "+j.candidates[0].finishReason+")":"")+".");
+  }else{
+    $("diag").textContent="Diagnóstico: falhou após "+sec()+" · prompt "+sys.length+" car. · "+(netErr?netErr.name:"?")+falhas;
+    say(netErr&&netErr.name==="TimeoutError"?"Nenhum modelo respondeu a tempo, senhor (tentei: "+chain.join(", ")+"). Use o botão de teste de velocidade no painel.":"Falha de conexão com a API, senhor.")}
+  busy=false;$("status").textContent=OK;
+}
+async function speedTest(){
+  const key=$("key").value.trim();
+  if(!key){say("Cole primeiro a chave do Gemini, senhor.","j",true);return}
+  if(busy)return;
+  busy=true;$("test").disabled=true;
+  const base="https://generativelanguage.googleapis.com/v1beta/",H={"Content-Type":"application/json","x-goog-api-key":key},rep=["TESTE DE VELOCIDADE ("+new Date().toLocaleTimeString("pt-BR")+")"];
+  const cur=$("model").value.trim(),secs=t0=>((performance.now()-t0)/1000).toFixed(1)+" s";
+  let flashLite="";
+  $("status").textContent="Testando: lista de modelos…";
+  let t0=performance.now();
+  try{
+    const r=await fetch(base+"models?pageSize=200",{signal:AbortSignal.timeout(15000),headers:{"x-goog-api-key":key}});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)rep.push("Lista de modelos: HTTP "+r.status+" "+(j.error?.message||"").slice(0,100));
+    else{
+      const ms=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent")).map(m=>m.name.replace("models/",""));
+      const fl=ms.filter(n=>/flash/.test(n));
+      flashLite=fl.find(n=>/flash-lite/.test(n)&&n!==cur)||"";
+      rep.push("Lista de modelos ("+secs(t0)+"): seu modelo \""+cur+"\" "+(ms.includes(cur)?"EXISTE":"NÃO aparece")+" na lista. Modelos flash disponíveis: "+(fl.slice(0,14).join(", ")||"nenhum"));
+    }
+  }catch(e){rep.push("Lista de modelos: "+e.name+" após "+secs(t0)+" (a rede pode estar bloqueando a API do Google)")}
+  const run=async(label,model,cfg)=>{
+    $("status").textContent="Testando: "+label+"…";
+    const t=performance.now();
+    try{
+      const r=await fetch(base+"models/"+encodeURIComponent(model)+":generateContent",{method:"POST",signal:AbortSignal.timeout(20000),headers:H,
+        body:JSON.stringify({contents:[{role:"user",parts:[{text:"Responda apenas: ok"}]}],...(cfg?{generationConfig:cfg}:{})})});
+      const j=await r.json().catch(()=>({})),u=j.usageMetadata||{};
+      rep.push(label+": "+secs(t)+" · HTTP "+r.status+(r.ok?" · raciocínio "+(u.thoughtsTokenCount??"?")+" tokens":" · "+(j.error?.message||"").slice(0,100)));
+    }catch(e){rep.push(label+": "+e.name+" após "+secs(t))}
+  };
+  await run(cur+" padrão",cur,null);
+  await run(cur+" thinkingLevel low",cur,{thinkingConfig:{thinkingLevel:"low"}});
+  await run(cur+" thinkingBudget 0",cur,{thinkingConfig:{thinkingBudget:0}});
+  if(flashLite)await run(flashLite+" padrão",flashLite,null);
+  say(rep.join("\n"),"j",true);
+  $("status").textContent=OK;$("test").disabled=false;busy=false;
+}
+$("test").onclick=speedTest;
+$("cf").onsubmit=e=>{e.preventDefault();const q=$("q").value.trim();if(q){$("q").value="";ask(q)}};
+
+/* ---------- orbe ---------- */
+const cv=$("orb"),c=cv.getContext("2d"),still=matchMedia("(prefers-reduced-motion:reduce)").matches;
+function draw(t){
+  c.clearRect(0,0,168,168);const amp=speaking?7:2,r=44;
+  for(let k=0;k<3;k++){c.beginPath();
+    for(let a=0;a<=6.3;a+=.1){const rr=r+k*8+Math.sin(a*(3+k)+t/(still?1e9:400+k*150))*amp;
+      const x=84+Math.cos(a)*rr,y=84+Math.sin(a)*rr;a?c.lineTo(x,y):c.moveTo(x,y)}
+    c.closePath();c.strokeStyle=["#16408f","#2f8a5f","#f2c230"][k];c.globalAlpha=1-k*.3;c.lineWidth=2;c.stroke()}
+  c.globalAlpha=1;requestAnimationFrame(draw)}
+requestAnimationFrame(draw);
+loadEnergy();
+load();
+</script>
+</body>
+</html>

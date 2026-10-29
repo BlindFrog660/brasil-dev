@@ -1,0 +1,7 @@
+{
+  "name": "brasil-dev",
+  "private": true,
+  "description": "Brasil em Desenvolvimento: protótipo com testes automáticos",
+  "scripts": { "test": "node tests/e2e.js" },
+  "dependencies": { "playwright": "^1.49.1" }
+}
