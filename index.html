@@ -3,50 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Brasil em Desenvolvimento · protótipo</title>
+<title>Brasil em Desenvolvimento | Inteligência territorial</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
-:root{--bg:#e9eee8;--panel:#f7f9f5;--ink:#13222b;--mute:#5a6b73;--green:#0b5d3b;--blue:#16408f;--yellow:#f2c230;--line:#cfd8d0;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1a1f;--panel:#17262d;--ink:#e6efe9;--mute:#9db0b6;--green:#4fc08a;--blue:#7fa8ff;--yellow:#f2c230;--line:#2a3d45;color-scheme:dark}}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,sans-serif;display:grid;grid-template-columns:1fr 400px;grid-template-rows:auto 1fr;gap:12px;padding:12px}
-header{grid-column:1/-1;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
-h1{font-size:1.5rem;font-weight:800;margin:0;letter-spacing:-.02em}
-header span{color:var(--mute);font-size:.9rem}
-#map{border-radius:10px;border:1px solid var(--line);min-height:420px}
-aside{display:flex;flex-direction:column;gap:12px;min-height:0}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
-#jarvis{display:flex;flex-direction:column;gap:8px;flex:1;min-height:300px}
-#orbwrap{display:flex;align-items:center;gap:12px}
-canvas{width:84px;height:84px;flex:none}
-#log{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;font-size:.92rem;line-height:1.45;min-height:120px}
-.m{padding:8px 10px;border-radius:8px;max-width:92%;white-space:pre-wrap}
-.j{background:color-mix(in srgb,var(--blue) 14%,transparent);align-self:flex-start}
-.u{background:color-mix(in srgb,var(--yellow) 30%,transparent);align-self:flex-end}
-form{display:flex;gap:6px}
-input,button,select{font:inherit;border-radius:8px;border:1px solid var(--line);padding:8px 10px;background:var(--bg);color:var(--ink)}
-input{flex:1;min-width:0}
-button{cursor:pointer;background:var(--green);color:#fff;border-color:var(--green);font-weight:600}
-button.alt{background:transparent;color:var(--ink);border-color:var(--line);font-weight:400}
-:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-h2{font-size:1rem;margin:0 0 6px}
-.big{font-size:1.6rem;font-weight:800;color:var(--green)}
-.small{color:var(--mute);font-size:.82rem}
-#voice{white-space:nowrap}
-details{margin-top:6px;font-size:.85rem}
-details input,details select{width:100%;margin-top:4px}
-ul{margin:6px 0 0;padding-left:18px;font-size:.88rem}
-@media (max-width:860px){body{grid-template-columns:1fr;grid-template-rows:auto 420px auto;height:auto}}
+:root{--bg:#eef2ef;--panel:#fff;--ink:#182f2a;--mute:#61736d;--green:#12634c;--blue:#266758;--yellow:#dcae48;--line:#dae3dc;color-scheme:light}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Segoe UI,system-ui,sans-serif;display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto auto minmax(540px,1fr);gap:20px;padding:0 28px 28px;height:100vh;min-height:900px}
+header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:22px 0;gap:20px}.brand{display:flex;align-items:center;gap:12px}.brandmark{background:var(--green);color:white;width:42px;height:42px;display:grid;place-items:center;border-radius:12px;font-size:24px}.eyebrow{text-transform:uppercase;font-size:10px;letter-spacing:2px;font-weight:700;color:var(--green)}h1{font-size:17px;letter-spacing:-.4px;margin:3px 0;font-weight:700}header span{font-size:12px;color:var(--mute)}.headlinks{display:flex;align-items:center;gap:18px}.headlinks a{color:var(--mute);font-size:12px;text-decoration:none}.freebadge{background:#deeee4;color:#12634c;border:1px solid #c3dfcf;padding:7px 10px;border-radius:20px;font-size:11px}
+.intro{grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;padding-top:5px}.intro h2{font-size:32px;letter-spacing:-1.3px;margin:7px 0 9px;line-height:1.1}.intro p{color:var(--mute);font-size:13px;margin:0;max-width:670px;line-height:1.6}.intro small{display:block;color:var(--mute);font-size:11px;text-align:right;line-height:1.7}.workspace{min-width:0;display:grid;grid-template-rows:auto minmax(340px,1fr) auto;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 8px 35px #193a2310}.mapbar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;gap:15px}.mapbar h2{margin:0;font-size:14px}.mapbar p{margin:5px 0 0;color:var(--mute);font-size:11px}#map{min-height:340px;border:0;border-radius:0}.maplegend{display:flex;align-items:center;gap:9px;padding:13px 18px;font-size:10px;color:var(--mute);flex-wrap:wrap}.gradient{width:90px;height:7px;border-radius:8px;background:linear-gradient(90deg,#e1efe6,#0b5d3b)}.dot{width:8px;height:8px;display:inline-block;border-radius:50%;background:#b15b16;margin-left:auto}
+aside{display:flex;flex-direction:column;gap:14px;min-height:0}.box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}h2{font-size:14px;margin:0 0 8px}.big{font-size:29px;font-weight:700;color:var(--green);letter-spacing:-1px;margin:8px 0}.small{font-size:11px;color:var(--mute);line-height:1.6}.sectionlabel{font-size:9px;letter-spacing:1.5px;color:var(--mute);text-transform:uppercase;font-weight:700;margin-bottom:10px}#pf{margin-top:14px!important}form{display:flex;gap:7px}input,select,button{font:inherit;border-radius:8px;border:1px solid var(--line);padding:10px;background:#f7f9f7;color:var(--ink);font-size:12px}input{flex:1;min-width:0}button{background:var(--green);color:white;cursor:pointer;font-weight:600;border-color:var(--green)}button:hover{filter:brightness(.95)}button.alt{background:white;color:var(--ink);border-color:var(--line);font-weight:500}button:disabled{opacity:.55;cursor:wait}:focus-visible{outline:3px solid #dcae48;outline-offset:3px}ul{padding-left:18px;font-size:12px}#energy{font-size:10px;border-top:1px solid var(--line);padding-top:10px}#energy a{color:var(--green)}
+#jarvis{display:flex;flex-direction:column;flex:1;min-height:350px;gap:12px;padding:16px}#orbwrap{display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--line);padding-bottom:12px}canvas{width:52px;height:52px;flex:none}#status{font-size:10px}#diag{font-size:9px;max-height:36px;overflow:auto}#voice{font-size:10px;padding:7px;white-space:nowrap}#log{flex:1;min-height:100px;max-height:280px;overflow:auto;display:flex;flex-direction:column;gap:10px;font-size:12px;line-height:1.65;scrollbar-width:thin}.m{padding:11px 12px;max-width:96%;border-radius:10px;white-space:pre-wrap}.j{background:#f0f5f1;align-self:flex-start}.u{background:#17634c;color:#fff;align-self:flex-end}#cf input{background:white}details{font-size:11px;color:var(--mute)}summary{cursor:pointer;padding:4px 0}details input,details select{width:100%;margin:6px 0}label{font-size:11px}.voicegrid{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center}.voicegrid select{grid-column:1/-1}.voicegrid button{font-size:11px}.quickasks{display:flex;gap:6px;flex-wrap:wrap}.quickasks button{font-size:10px;padding:6px 8px;background:white;color:var(--green);border-color:var(--line)}.source-pill{font-size:10px;padding:5px 8px;background:#f0f5f1;border-radius:5px;white-space:nowrap}dialog{border:1px solid var(--line);border-radius:18px;max-width:700px;width:90%;padding:28px;color:var(--ink);box-shadow:0 20px 100px #0003}dialog::backdrop{background:#102c2366;backdrop-filter:blur(3px)}dialog h2{font-size:25px}dialog p,dialog li{font-size:13px;line-height:1.7}dialog li{margin-bottom:10px}.dialoghead{display:flex;justify-content:space-between;align-items:center;gap:15px}
+@media(min-width:1600px){body{padding-left:max(28px,calc((100vw - 1560px)/2));padding-right:max(28px,calc((100vw - 1560px)/2))}}@media(max-width:1000px){body{padding:0 14px 20px;gap:14px;grid-template-columns:minmax(0,1fr) 330px}.intro h2{font-size:26px}.intro small{display:none}.headlinks a{display:none}}@media(max-width:760px){body{height:auto;min-height:100vh;grid-template-columns:1fr;grid-template-rows:auto auto auto auto}header{padding:16px 0}.headlinks{gap:8px}.brandmark{width:34px;height:34px}h1{font-size:14px}.freebadge{display:none}.intro{padding-bottom:6px}.intro h2{font-size:27px}.workspace{height:510px}aside{display:grid;grid-template-columns:1fr}#jarvis{min-height:480px}#log{max-height:360px}.mapbar{padding:12px}.source-pill{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<header><h1>Brasil em Desenvolvimento</h1><span>Protótipo v6.1: IBGE, energia ONS e agente Jarvis</span></header>
-<div id="map" role="application" aria-label="Mapa interativo do Brasil"></div>
+<header><div class="brand"><div class="brandmark" aria-hidden="true">◈</div><div><div class="eyebrow">Inteligência territorial</div><h1>Brasil em Desenvolvimento</h1></div></div><nav class="headlinks" aria-label="Navegação principal"><a href="https://www.ibge.gov.br/" target="_blank" rel="noopener">IBGE ↗</a><a href="https://dados.ons.org.br/" target="_blank" rel="noopener">ONS ↗</a><span class="freebadge">Acesso gratuito</span><button class="alt" id="roadmap-open">Visão do projeto</button></nav></header>
+<section class="intro"><div><div class="eyebrow">Do território à transformação</div><h2>Explore o Brasil.<br>Planeje o próximo passo.</h2><p>Conecte indicadores, infraestrutura e ideias em um só mapa. Explore um estado e desenvolva propostas com o Jarvis.</p></div><small>Fontes públicas · Brasil e América Latina<br>Versão 7 · Planejamento com evidências</small></section>
+<main class="workspace"><div class="mapbar"><div><h2>Panorama territorial</h2><p>Selecione um estado para explorar seus indicadores</p></div><span class="source-pill" id="data-status" role="status">Conectando ao IBGE…</span></div><div id="map" role="application" aria-label="Mapa interativo do Brasil"></div><div class="maplegend"><span>PIB por estado</span><span class="gradient" aria-hidden="true"></span><span>Menor → maior</span><span class="dot" aria-hidden="true"></span><span>Intercâmbio ONS · MWmed</span></div></main>
 <aside>
   <section class="box" id="info" aria-live="polite">
-    <h2 id="uf">Clique em um estado</h2>
+    <div class="sectionlabel">Território selecionado</div><h2 id="uf">Clique em um estado</h2>
     <div class="big" id="pib">–</div>
     <div class="small" id="pibsub">PIB a preços correntes (IBGE/SIDRA)</div>
     <form id="pf" style="margin-top:8px"><input id="ptitle" placeholder="Nome do projeto neste local" aria-label="Nome do projeto"><button>Criar projeto</button></form>
@@ -57,16 +34,16 @@ ul{margin:6px 0 0;padding-left:18px;font-size:.88rem}
     <div id="orbwrap"><canvas id="orb" width="168" height="168" aria-hidden="true"></canvas>
       <div><h2 style="margin:0">Jarvis</h2><div class="small" id="status">Pronto para ajudar, senhor.</div><div class="small" id="diag" aria-live="off"></div></div>
       <button class="alt" id="voice" type="button" style="margin-left:auto" aria-pressed="false">Voz: off</button></div>
-    <div id="log"></div>
+    <div id="log" role="log" aria-label="Conversa com Jarvis" aria-live="polite"></div><div class="quickasks" aria-label="Sugestões de perguntas"><button type="button" data-ask="Como a energia pode integrar Brasil, Argentina e Uruguai?">Integração energética</button><button type="button" data-ask="Fale da usina de Itaipu em três frases.">Explorar Itaipu</button></div>
     <form id="cf"><input id="q" placeholder="Pergunte algo ao Jarvis" aria-label="Pergunta"><button>Enviar</button></form>
-    <details><summary>Conectar IA gratuita (Gemini)</summary>
+    <details id="voice-settings"><summary>Voz e leitura do Jarvis</summary><div class="voicegrid"><label for="voice-select">Voz em português</label><select id="voice-select" aria-label="Voz do Jarvis"></select><label for="voice-rate">Velocidade <output id="rate-label">0,96×</output></label><input id="voice-rate" type="range" min="0.75" max="1.2" value="0.96" step="0.01"><button id="voice-demo" class="alt" type="button">Ouvir amostra</button><button id="voice-stop" class="alt" type="button">Parar leitura</button></div><div class="small" id="voice-hint">A qualidade depende das vozes disponíveis no navegador. Nenhuma assinatura ou chave é usada para a leitura.</div></details><details id="ai-settings"><summary>Conectar IA gratuita (Gemini)</summary>
       <input id="key" type="password" placeholder="Chave da API do Google AI Studio" aria-label="Chave da API">
       <input id="model" value="gemini-flash-lite-latest" aria-label="Modelo">
       <select id="think" aria-label="Raciocínio do modelo"><option value="">Raciocínio: padrão do modelo</option><option value="level">Raciocínio: baixo (thinkingLevel)</option></select>
       <button id="test" type="button" class="alt" style="margin-top:6px">Testar velocidade da API</button>
       <div class="small">A chave fica só neste navegador. Sem ela, o Jarvis responde apenas com os dados do mapa.</div></details>
   </section>
-</aside>
+</aside><dialog id="roadmap"><div class="dialoghead"><h2>Uma plataforma para desenvolver o Brasil</h2><button class="alt" id="roadmap-close" aria-label="Fechar visão do projeto">Fechar</button></div><p>Hoje: mapa estadual, PIB do IBGE, intercâmbio internacional ONS e propostas com Jarvis. As próximas frentes retomam sua ideia original:</p><ol><li><strong>Conhecimento brasileiro:</strong> busca em SciELO, BDTD, IPEA e CEPAL, com referências verificáveis nas respostas.</li><li><strong>O que move o país:</strong> indústria, agropecuária, serviços, emprego e comércio exterior.</li><li><strong>Infraestrutura e integração:</strong> capacidade de energia, transportes, combustíveis e conexões com a América Latina.</li><li><strong>Legislação:</strong> propostas e normas com links oficiais, abrangência e data.</li><li><strong>Projetos duráveis:</strong> salvar, exportar, comparar cenários e acompanhar objetivos e indicadores.</li><li><strong>Confiança nos dados:</strong> datas de referência, cache oficial para indisponibilidade do IBGE e histórico de atualizações.</li></ol><p class="small">Frentes planejadas: os conjuntos acima ainda não estão integrados. Fontes abertas e ferramentas gratuitas são a regra do projeto.</p></dialog>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -89,17 +66,19 @@ function select(f,latlng){
   $("pib").textContent=p?fmt(p.v):"sem dados";
   $("pibsub").textContent=p?"PIB "+p.ano+" a preços correntes (IBGE/SIDRA)":"Não foi possível carregar o PIB";
 }
+async function fetchIBGE(url){const r=await fetch(url,{signal:AbortSignal.timeout(15000)});if(!r.ok)throw new Error("IBGE HTTP "+r.status);return r}
 async function load(){
   try{
     const [est,g,pib]=await Promise.all([
-      fetch(IBGE+"v1/localidades/estados").then(r=>r.json()),
-      fetch(IBGE+"v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&qualidade=minima&intrarregiao=UF").then(r=>r.json()),
-      fetch(IBGE+"v3/agregados/5938/periodos/-1/variaveis/37?localidades=N3[all]").then(r=>r.json())]);
+      fetchIBGE(IBGE+"v1/localidades/estados").then(r=>r.json()),
+      fetchIBGE(IBGE+"v3/malhas/paises/BR?formato=application/vnd.geo%2Bjson&qualidade=minima&intrarregiao=UF").then(r=>r.json()),
+      fetchIBGE(IBGE+"v3/agregados/5938/periodos/-1/variaveis/37?localidades=N3[all]").then(r=>r.json())]);
     est.forEach(e=>names[String(e.id)]=e.nome+" ("+e.sigla+")");
     pib[0].resultados[0].series.forEach(s=>{const a=Object.keys(s.serie).pop();pibs[s.localidade.id]={v:+s.serie[a],ano:a}});
     geo=L.geoJSON(g,{style,onEachFeature:(f,l)=>{layers[f.properties.codarea]=l;l.on("click",e=>{clearMark();select(f,e.latlng)})}}).addTo(map);
+    $("data-status").textContent="IBGE conectado · 27 estados";
     say("Dados do IBGE carregados, senhor. Clique em um estado e pergunte o que quiser.");
-  }catch(e){say("Não consegui acessar o IBGE agora. Verifique a conexão e recarregue a página.")}
+  }catch(e){$("data-status").textContent="IBGE indisponível · tente mais tarde";say("Não consegui acessar o IBGE agora. Verifique a conexão e recarregue a página.")}
 }
 
 /* ---------- foco do mapa (segue a pergunta ao Jarvis) ---------- */
@@ -170,9 +149,36 @@ $("pf").onsubmit=e=>{e.preventDefault();
 };
 
 /* ---------- Jarvis ---------- */
-function say(t,cls="j",mute){const d=document.createElement("div");d.className="m "+cls;d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9;
-  if(cls==="j"&&voiceOn&&!mute&&"speechSynthesis"in window){const u=new SpeechSynthesisUtterance(t);u.lang="pt-BR";u.onstart=()=>speaking=true;u.onend=()=>speaking=false;speechSynthesis.speak(u)}}
-$("voice").onclick=()=>{voiceOn=!voiceOn;$("voice").textContent="Voz: "+(voiceOn?"on":"off");$("voice").setAttribute("aria-pressed",voiceOn);if(!voiceOn&&"speechSynthesis"in window)speechSynthesis.cancel()};
+function say(t,cls="j",mute){const d=document.createElement("div");d.className="m "+cls;d.textContent=t;$("log").appendChild(d);$("log").scrollTop=1e9;if(cls==="j"&&voiceOn&&!mute)readAloud(t)}
+let voiceSession=0,availableVoices=[];
+function stopVoice(){voiceSession++;speaking=false;if("speechSynthesis"in window)speechSynthesis.cancel()}
+function refreshVoices(){
+  if(!("speechSynthesis"in window)){["voice","voice-demo","voice-select","voice-rate","voice-stop"].forEach(id=>$(id).disabled=true);$("voice-hint").textContent="Este navegador não oferece leitura em voz alta.";return}
+  availableVoices=speechSynthesis.getVoices().filter(v=>/^pt(?:-|_)/i.test(v.lang)).sort((a,b)=>voiceScore(b)-voiceScore(a));
+  const chosen=store.get("jvoice");$("voice-select").replaceChildren();
+  availableVoices.forEach(v=>{const opt=document.createElement("option");opt.value=v.voiceURI;opt.textContent=v.name+" · "+v.lang;$("voice-select").append(opt)});
+  if(availableVoices.some(v=>v.voiceURI===chosen))$("voice-select").value=chosen;
+  if(!availableVoices.length){const opt=document.createElement("option");opt.textContent="Voz padrão do navegador";opt.value="";$("voice-select").append(opt)}
+  $("voice-hint").textContent=availableVoices.some(v=>/natural|neural|online/i.test(v.name))?"Voz natural detectada. Teste as opções e escolha a que preferir. Leitura gratuita; vozes online podem depender de internet.":"Usando as vozes disponíveis no navegador. Se não houver uma voz natural, a leitura ainda pode soar sintética. Teste as opções abaixo, sem custo.";
+}
+function voiceScore(v){return (/pt-BR/i.test(v.lang)?10:0)+(/natural|neural/i.test(v.name)?20:0)+(/online/i.test(v.name)?5:0)}
+function readAloud(text){
+  if(!("speechSynthesis"in window))return;stopVoice();const session=voiceSession;
+  const clean=text.replace(/https?:\/\/\S+/g,"link da fonte").replace(/[*#_`]/g,"").replace(/\[\[.*?\]\]/g,"").replace(/MWmed/g,"megawatts médios");
+  const chunks=clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean];let index=0;
+  function next(){if(session!==voiceSession||index>=chunks.length){speaking=false;return}const u=new SpeechSynthesisUtterance(chunks[index++].trim());u.lang="pt-BR";u.voice=availableVoices.find(v=>v.voiceURI===$("voice-select").value)||null;u.rate=Number($("voice-rate").value);u.pitch=1;u.volume=1;u.onstart=()=>{if(session===voiceSession)speaking=true};u.onend=()=>{if(session===voiceSession)next()};u.onerror=()=>{if(session===voiceSession)speaking=false};speechSynthesis.speak(u)}next();
+}
+$("voice").onclick=()=>{voiceOn=!voiceOn;$("voice").textContent="Voz: "+(voiceOn?"on":"off");$("voice").setAttribute("aria-pressed",String(voiceOn));if(!voiceOn)stopVoice()};
+$("voice-select").onchange=()=>{stopVoice();store.set("jvoice",$("voice-select").value)};
+$("voice-rate").value=store.get("jrate")||"0.96";
+function setRate(){$("rate-label").textContent=Number($("voice-rate").value).toLocaleString("pt-BR")+"×";store.set("jrate",$("voice-rate").value)}
+$("voice-rate").oninput=setRate;setRate();
+$("voice-demo").onclick=()=>readAloud("Olá, senhor. Vamos conectar conhecimento, território e boas ideias para desenvolver o Brasil. Estou pronto para ajudar.");
+$("voice-stop").onclick=stopVoice;
+if("speechSynthesis"in window)speechSynthesis.addEventListener("voiceschanged",refreshVoices);refreshVoices();
+window.addEventListener("pagehide",stopVoice);
+$("roadmap-open").onclick=()=>$("roadmap").showModal();$("roadmap-close").onclick=()=>$("roadmap").close();
+document.querySelectorAll("[data-ask]").forEach(b=>b.onclick=()=>ask(b.dataset.ask));
 $("key").value=store.get("gk");$("key").onchange=()=>store.set("gk",$("key").value);
 $("model").value=store.get("gm")||$("model").value;$("model").onchange=()=>store.set("gm",$("model").value.trim());
 function context(){return energyContext()+(sel?"Local selecionado: "+sel.nome+(sel.pib?"; PIB "+sel.pib.ano+": "+fmt(sel.pib.v):"")+". "+(focusNames?"Estados em foco no mapa: "+focusNames+". ":""):"Nenhum local selecionado. ")}
@@ -188,7 +194,7 @@ async function ask(q,quiet){
     say(sel?context()+"Para análises mais profundas, conecte a chave gratuita do Gemini no painel abaixo, senhor.":"Selecione um estado no mapa ou conecte a chave gratuita do Gemini para conversarmos livremente.");
     return}
   busy=true;$("status").textContent="Processando…";$("diag").textContent="";
-  const sys="Você é o Jarvis, assistente do usuário (chame-o de senhor), formal, preciso e levemente irônico. Foco: desenvolvimento do Brasil com base na geografia e integração com a América Latina. Responda em português, de forma objetiva. Seja conciso: no máximo 120 palavras, salvo se pedirem mais. Diga quando não tiver certeza e não invente dados. Quando a resposta tratar de um lugar específico (cidade, porto, usina, fronteira, país vizinho), termine com uma última linha exata no formato [[MAPA: latitude; longitude; zoom; rótulo curto]], com coordenadas reais aproximadas e zoom de 4 a 11; omita a linha se não tiver certeza das coordenadas ou se a pergunta for geral. PIB por estado (IBGE): "+Object.entries(pibs).map(([i,p])=>names[i]+" "+fmt(p.v)+" em "+p.ano).join("; ")+". "+context()+"Projetos criados: "+projects.map(p=>p.t+" ("+p.uf+")").join("; ");
+  const sys="Você é o Jarvis, assistente do usuário (chame-o de senhor), cordial, preciso, com linguagem natural e sem ironia forçada. Foco: desenvolvimento do Brasil com base na geografia e integração com a América Latina. Responda em português, de forma objetiva. Seja conciso: no máximo 120 palavras, salvo se pedirem mais. Diga quando não tiver certeza e não invente dados. Quando a resposta tratar de um lugar específico (cidade, porto, usina, fronteira, país vizinho), termine com uma última linha exata no formato [[MAPA: latitude; longitude; zoom; rótulo curto]], com coordenadas reais aproximadas e zoom de 4 a 11; omita a linha se não tiver certeza das coordenadas ou se a pergunta for geral. PIB por estado (IBGE): "+Object.entries(pibs).map(([i,p])=>names[i]+" "+fmt(p.v)+" em "+p.ano).join("; ")+". "+context()+"Projetos criados: "+projects.map(p=>p.t+" ("+p.uf+")").join("; ");
   const th=$("think").value,first=$("model").value.trim();
   const chain=[first,"gemini-flash-lite-latest","gemini-3.1-flash-lite"].filter((m,i,a)=>m&&a.indexOf(m)===i);
   const t0=performance.now(),sec=()=>((performance.now()-t0)/1000).toFixed(1)+" s",fails=[];
@@ -237,7 +243,7 @@ async function speedTest(){
     else{
       const ms=(j.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes("generateContent")).map(m=>m.name.replace("models/",""));
       const fl=ms.filter(n=>/flash/.test(n));
-      flashLite=fl.find(n=>/flash-lite/.test(n)&&n!==cur)||"";
+      flashLite=fl.find(n=>n==="gemini-3.1-flash-lite"&&n!==cur)||"";
       rep.push("Lista de modelos ("+secs(t0)+"): seu modelo \""+cur+"\" "+(ms.includes(cur)?"EXISTE":"NÃO aparece")+" na lista. Modelos flash disponíveis: "+(fl.slice(0,14).join(", ")||"nenhum"));
     }
   }catch(e){rep.push("Lista de modelos: "+e.name+" após "+secs(t0)+" (a rede pode estar bloqueando a API do Google)")}
@@ -276,3 +282,4 @@ load();
 </script>
 </body>
 </html>
+

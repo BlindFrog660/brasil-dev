@@ -125,9 +125,9 @@ async function cenario(browser, nome, url, gem, slug) {
   });
 
   if (gem) {
-    await passo("Preencher a chave do Gemini", async () => { await ev(() => { document.querySelector("details").open = true; }); await page.fill("#key", KEY); });
+    await passo("Preencher a chave do Gemini", async () => { await ev(() => { document.getElementById("ai-settings").open = true; }); await page.fill("#key", KEY); });
     await passo("Teste de velocidade da API (botão da página)", async () => {
-      await ev(() => { document.querySelector("details").open = true; });
+      await ev(() => { document.getElementById("ai-settings").open = true; });
       await page.click("#test");
       await page.waitForFunction(() => [...document.querySelectorAll("#log .m")].some(m => m.textContent.startsWith("TESTE DE VELOCIDADE")), null, { timeout: 150000 });
       const t = await ev(() => [...document.querySelectorAll("#log .m")].pop().textContent);
@@ -171,6 +171,23 @@ async function cenario(browser, nome, url, gem, slug) {
   }
 
   await shot("9-final");
+  await passo("Controles gratuitos de voz disponíveis", async () => {
+    await page.locator("#voice-settings summary").click();
+    if (!await page.locator("#voice-select").isVisible()) throw new Error("Seletor de voz ausente");
+    await page.locator("#voice-rate").fill("1.05");
+    const rate=await page.locator("#rate-label").textContent();
+    if(!rate.includes("1,05")) throw new Error("Velocidade não atualizada");
+    await page.locator("#voice-stop").click();
+    return "Seleção de voz, velocidade e parada disponíveis; qualidade auditiva depende das vozes do navegador.";
+  });
+  await passo("Layout móvel sem rolagem horizontal", async () => {
+    await page.setViewportSize({width:390,height:844});
+    await ev(()=>map.invalidateSize());
+    const fits=await ev(()=>document.documentElement.scrollWidth<=window.innerWidth);
+    await shot("10-mobile");
+    if(!fits) throw new Error("Conteúdo ultrapassa a largura do celular");
+    return "390px: mapa e painéis adaptados";
+  });
   await ctx.close();
 }
 
@@ -223,3 +240,4 @@ function escrever() {
     console.log(relatorio());
   }
 })();
+
