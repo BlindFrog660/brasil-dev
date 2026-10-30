@@ -91,7 +91,7 @@ async function cenario(browser, nome, url, gem, slug) {
     const info=await ev(()=>({closed:pilotClosed,alt:pilotAlternative,context:investigationContext()}));
     if(!info.closed||!info.alt||!info.context.includes("DEMONSTRATIVO"))throw new Error("Cenário não foi identificado como demonstrativo");
     await page.click("#toggle-evidence");if(!await page.locator("#evidence-list").isVisible())throw new Error("Evidências não abriram");
-    await shot("0-sala-dependencias");await page.click("#pilot-in-map");
+    await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:`${OUT}/screens/${slug}-0-sala-dependencias.png`,fullPage:true});await page.click("#pilot-in-map");
     if(!await page.locator("#map-view").isVisible()||await ev(()=>pilotMapLayer.getLayers().length)<5)throw new Error("Croqui não apareceu no território");
     await page.uncheck("#layer-pilot");await ev(()=>map.setView([-14.2,-51.9],4));
     return "Rede selecionável, evidências, cenário hipotético e croqui no mapa funcionando.";
@@ -155,6 +155,7 @@ async function cenario(browser, nome, url, gem, slug) {
     await page.waitForFunction(()=>typeof geo!=="undefined"&&geo);
     const saved=await ev(()=>({n:projects.length,t:projects[0]?.t,markers:projectMarkers.getLayers().length}));
     if(saved.n!==1||saved.t!=="Projeto de teste persistente"||saved.markers!==1)throw new Error("Projeto não restaurado");
+    await page.click('[data-workspace-view="map"]');
     const downloadPromise=page.waitForEvent("download");await page.click("#export-projects");const download=await downloadPromise;
     const doc=JSON.parse(fs.readFileSync(await download.path(),"utf8"));if(doc.version!==1||doc.projects.length!==1||JSON.stringify(doc).includes(KEY)&&KEY)throw new Error("Exportação inválida");
     return "Projeto e marcador restaurados; JSON exportado sem credenciais.";
@@ -275,7 +276,7 @@ async function cenario(browser, nome, url, gem, slug) {
     await page.setViewportSize({width:390,height:844});
     await ev(()=>map.invalidateSize());
     const fits=await ev(()=>document.documentElement.scrollWidth<=window.innerWidth);
-    await shot("10-mobile");
+    await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:`${OUT}/screens/${slug}-10-mobile.png`,fullPage:true});
     if(!fits) throw new Error("Conteúdo ultrapassa a largura do celular");
     return "390px: mapa e painéis adaptados";
   });
