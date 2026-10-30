@@ -170,6 +170,17 @@ async function cenario(browser, nome, url, gem, slug) {
     return "Arquivo inválido recusado; reimportação válida sem duplicação.";
   });
 
+  await passo("Literatura orienta mapa e projeto com autoria e limites explícitos",async()=>{
+    await page.click("#theory-open");await page.selectOption("#theory-select","becker");await page.click("#theory-apply");
+    const info=await ev(()=>({theory:activeTheory,text:document.getElementById("theory-active").textContent,ctx:theoryContext()}));
+    if(info.theory!=="becker"||!info.text.includes("Amazônia Legal")||!info.ctx.includes("Não atribua"))throw new Error("Lente sem escopo ou autoria explícitos");
+    await page.click("#theory-create-project");
+    const pr=await ev(()=>projects.find(p=>p.theory==="becker"));
+    if(!pr?.demonstrative||!pr.reference?.url||pr.steps.length!==4)throw new Error("Projeto não contém referência e plano de estudo");
+    await shot("12-literatura-projeto");await page.click("#theory-clear");await page.click("#theory-close");
+    await ev(()=>{projects=projects.filter(p=>!p.theory);renderProjects();persistProjects()});
+    return "Bertha Becker com fonte e recorte explícitos; projeto demonstrativo salvo com objetivo e etapas.";
+  });
   await passo("Caderno distingue notícias e preserva fontes após recarregar",async()=>{
     await page.click("#sources-open");await page.selectOption("#source-type","news");
     await page.fill("#source-title","Notícia demonstrativa de teste");await page.fill("#source-url","https://example.org/noticia-de-teste");
