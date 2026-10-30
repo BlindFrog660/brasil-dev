@@ -154,6 +154,25 @@ async function cenario(browser, nome, url, gem, slug) {
     return "Arquivo inválido recusado; reimportação válida sem duplicação.";
   });
 
+  await passo("Pesquisa acadêmica real com DOI e contexto rastreável", async()=>{
+    await page.click("#research-open");await page.fill("#research-query","energia");await page.click("#research-submit");
+    await page.waitForFunction(()=>!document.getElementById("research-submit").disabled,null,{timeout:20000});
+    if(await page.locator(".research-result").count()===0)throw new Error(await page.locator("#research-status").textContent());
+    await page.locator(".research-result input").first().check();
+    const result=await ev(()=>({refs:[...selectedReferences.values()],context:academicContext()}));
+    if(!result.refs[0].doi.startsWith("10.1590/")||!result.context.includes("NÃO foi lido"))throw new Error("Referência sem rastreabilidade");
+    const href=await page.locator(".research-result a").first().getAttribute("href");if(new URL(href).hostname!=="doi.org")throw new Error("Link de referência inseguro");
+    await shot("11-pesquisa");return result.refs[0].title+" · "+result.refs[0].doi;
+  });
+  await passo("Pesquisa trata falha de rede sem inventar resultados",async()=>{
+    await page.route("https://api.crossref.org/**",r=>r.abort());await page.fill("#research-query","consulta bloqueada para teste");await page.click("#research-submit");
+    await page.waitForFunction(()=>!document.getElementById("research-submit").disabled);
+    if(!await page.locator("#research-status").textContent().then(x=>x.includes("Não foi possível")))throw new Error("Falha não informada");
+    if(await page.locator(".research-result").count()!==0)throw new Error("Resultados antigos mostrados como atuais");
+    await page.click("#clear-references");if(await ev(()=>selectedReferences.size)!==0)throw new Error("Referências não limpas");
+    await page.click("#research-close");return "Falha explícita, sem resultados fabricados; seleção pode ser limpa.";
+  });
+
   if (gem) {
     await passo("Preencher a chave do Gemini", async () => { await ev(() => { document.getElementById("ai-settings").open = true; }); await page.fill("#key", KEY); });
     await passo("Teste de velocidade da API (botão da página)", async () => {
