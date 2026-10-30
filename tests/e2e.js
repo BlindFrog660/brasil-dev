@@ -82,6 +82,21 @@ async function cenario(browser, nome, url, gem, slug) {
 
   await passo("Abrir a página", async () => { await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 }); });
 
+  await passo("Sala de dependências integra seleção, cenário e território",async()=>{
+    await page.waitForSelector("#dependency-network circle");
+    if(!await page.locator("#network-view").isVisible())throw new Error("Sala de dependências não é a visão inicial");
+    await page.click('[data-pilot-node="port"]');
+    if(!await page.locator("#investigation-title").textContent().then(t=>t.includes("Porto C")))throw new Error("Dossiê não acompanhou seleção");
+    await page.click("#close-crossing");await page.selectOption("#scenario-mode","alternative");
+    const info=await ev(()=>({closed:pilotClosed,alt:pilotAlternative,context:investigationContext()}));
+    if(!info.closed||!info.alt||!info.context.includes("DEMONSTRATIVO"))throw new Error("Cenário não foi identificado como demonstrativo");
+    await page.click("#toggle-evidence");if(!await page.locator("#evidence-list").isVisible())throw new Error("Evidências não abriram");
+    await shot("0-sala-dependencias");await page.click("#pilot-in-map");
+    if(!await page.locator("#map-view").isVisible()||await ev(()=>pilotMapLayer.getLayers().length)<5)throw new Error("Croqui não apareceu no território");
+    await page.uncheck("#layer-pilot");await ev(()=>map.setView([-14.2,-51.9],4));
+    return "Rede selecionável, evidências, cenário hipotético e croqui no mapa funcionando.";
+  });
+
   await passo("Dados do IBGE carregam", async () => {
     await page.waitForFunction(() => /Dados do IBGE carregados|Não consegui acessar o IBGE/.test(document.getElementById("log").textContent), null, { timeout: 40000 });
     const t = await ev(() => document.getElementById("log").textContent);
@@ -134,6 +149,7 @@ async function cenario(browser, nome, url, gem, slug) {
   });
   await passo("Projetos sobrevivem ao recarregamento e podem ser exportados", async () => {
     await ev(()=>layers["35"].fire("click",{latlng:layers["35"].getBounds().getCenter()}));
+    await page.click('[data-workspace-view="map"]');
     await page.fill("#ptitle","Projeto de teste persistente");await page.click("#pf button");
     await page.reload({waitUntil:"domcontentloaded"});
     await page.waitForFunction(()=>typeof geo!=="undefined"&&geo);
@@ -152,6 +168,20 @@ async function cenario(browser, nome, url, gem, slug) {
     await page.waitForFunction(()=>!document.getElementById("project-status").textContent.includes("recusada"));
     if(await ev(()=>projects.length)!==1)throw new Error("Importação duplicou o projeto");
     return "Arquivo inválido recusado; reimportação válida sem duplicação.";
+  });
+
+  await passo("Caderno distingue notícias e preserva fontes após recarregar",async()=>{
+    await page.click("#sources-open");await page.selectOption("#source-type","news");
+    await page.fill("#source-title","Notícia demonstrativa de teste");await page.fill("#source-url","https://example.org/noticia-de-teste");
+    await page.fill("#source-date","2026-10-30");await page.fill("#source-note","Anúncio a confirmar em fonte oficial.");await page.click("#source-form button");
+    if(await ev(()=>investigationSources.length)!==1)throw new Error("Fonte não adicionada");
+    await page.click("#sources-close");await page.reload({waitUntil:"domcontentloaded"});
+    const source=await ev(()=>({n:investigationSources.length,c:sourceNotebookContext()}));
+    if(source.n!==1||!source.c.includes("Notícia")||!source.c.includes("sem verificação automática"))throw new Error("Fonte perdeu categoria ou proveniência");
+    await page.click("#sources-open");await page.click("#source-notebook-list button");await page.click("#sources-close");
+    if(await ev(()=>investigationSources.length)!==0)throw new Error("Remoção de fonte falhou");
+    await page.click('[data-workspace-view="map"]');
+    return "Notícia salva e restaurada com data e nota; contexto distingue anúncio de fato comprovado.";
   });
 
   await passo("Pesquisa acadêmica real com DOI e contexto rastreável", async()=>{
@@ -230,6 +260,7 @@ async function cenario(browser, nome, url, gem, slug) {
     return "Seleção de voz, velocidade e parada disponíveis; qualidade auditiva depende das vozes do navegador.";
   });
   await passo("Layout móvel sem rolagem horizontal", async () => {
+    await page.click('[data-workspace-view="network"]');
     await page.setViewportSize({width:390,height:844});
     await ev(()=>map.invalidateSize());
     const fits=await ev(()=>document.documentElement.scrollWidth<=window.innerWidth);

@@ -2,7 +2,7 @@ name: Testar site
 
 on:
   push:
-    branches: [main]
+    branches: [main, interface-laboratorio-v10]
     paths: ["index.html", "tests/**", "scripts/**", "package.json", ".github/workflows/test.yml"]
   workflow_dispatch:
     inputs:
