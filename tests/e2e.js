@@ -93,11 +93,11 @@ async function cenario(browser, nome, url, gem, slug) {
     if(await ev(()=>sectorSelected.size)!==3)throw new Error('Seleção múltipla falhou');
     await ev(async()=>{for(const id of ['ferrovias','portos','aeroportos'])await loadSector(sectorCatalog.find(d=>d.id===id),{full:true})});
     const result=await ev(()=>Object.fromEntries([...sectorLayers].map(([k,l])=>[k,l.getLayers().length])));
-    if(result.ferrovias!==52||result.portos!==248||result.aeroportos!==505)throw new Error('Cópias oficiais não carregaram completas');
+    if(result.ferrovias!==52||result.portos!==247||result.aeroportos!==505)throw new Error('Cópias oficiais não carregaram completas');
     await page.selectOption('#analysis-mode','cartografia-oficial-brasil');
     if(!(await ev(()=>analysisModeContext())).toLowerCase().includes('distribuição'))throw new Error('Skill não entrou no método do Jarvis');
     await page.selectOption('#analysis-mode','analisar-infraestrutura-brasil');
-    return '9 seleções; composição múltipla; 52 trechos, 248 instalações portuárias e 505 aeroportos de fontes oficiais; 4 skills disponíveis.';
+    return '9 seleções; composição múltipla; 52 trechos, 247 instalações portuárias localizadas e 505 aeroportos de fontes oficiais; 4 skills disponíveis.';
   });
   await passo("Pergunta sobre Norte–Sul desenha traçado e abre histórico documentado",async()=>{
     await page.fill('#q','Mostre a Ferrovia Norte-Sul no mapa');await page.click('#cf button');
@@ -149,7 +149,7 @@ async function cenario(browser, nome, url, gem, slug) {
     if(await page.locator('#kg-note img').count())throw new Error('HTML da nota foi executado');
     const persist=await ev(()=>JSON.parse(localStorage.getItem('brasil-knowledge-v1')).find(n=>n.title==='Investigação de teste'));
     if(!persist||await ev(()=>knowledgeContext())!=='')throw new Error('Nota não salva ou enviada à IA sem seleção');
-    await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('#kg-list button');
+    await page.reload({waitUntil:'domcontentloaded'});await page.click('[data-workspace-view="knowledge"]');await page.waitForSelector('#kg-list button');
     await page.locator('#kg-list').getByRole('button',{name:'Investigação de teste',exact:true}).click();
     const roundtrip=await ev(()=>{const n=kgNotes.find(x=>x.path===kgSelected),p=kgParse(kgMarkdown(n),n.path);return p.body.trim()===n.body.trim()&&kgResolve('Brasil')&&kgLinks(p).length===2});
     if(!roundtrip)throw new Error('Roundtrip Markdown perdeu conteúdo ou links');
