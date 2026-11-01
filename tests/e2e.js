@@ -182,6 +182,45 @@ async function cenario(browser, nome, url, gem, slug) {
     await ev(()=>{projects=projects.filter(p=>!p.theory);renderProjects();persistProjects()});
     return "Bertha Becker com fonte e recorte explícitos; projeto demonstrativo salvo com objetivo e etapas.";
   });
+  await passo("Biblioteca de autores responde com proveniência e recusa tema sem apoio",async()=>{
+    await page.click('#scholar-open');
+    await page.waitForSelector('#scholar-dialog[open]');
+    const initial=await ev(()=>({author:selectedScholar,note:scholarResult.note?.id,src:document.getElementById('scholar-photo').src,ctx:scholarContext()}));
+    if(initial.author!=='santos'||initial.note!=='MS-01'||!initial.ctx.includes('Não personifique'))throw new Error('Consulta sem autoria, fonte ou limite');
+    await page.fill('#scholar-question','Qual é a previsão de chuva amanhã?');await page.click('#scholar-submit');
+    if(!(await page.textContent('#scholar-result')).includes('Sem apoio suficiente')||!(await page.isDisabled('#scholar-project')))throw new Error('Resposta sem fonte foi permitida');
+    await page.fill('#scholar-question','<img src=x onerror=alert(1)>');await page.click('#scholar-submit');
+    if(await page.locator('#scholar-result img').count())throw new Error('Pergunta interpretada como HTML');
+    await page.click('[data-scholar="becker"]');
+    await page.locator('#scholar-suggestions button').nth(1).click();
+    if(await ev(()=>scholarResult.note?.id)!=='BB-02')throw new Error('Rede não recuperou nota pertinente');
+    await page.screenshot({path:`${OUT}/screens/${slug}-13-biblioteca.png`,fullPage:true});
+    await page.click('#scholar-project');
+    const saved=await ev(()=>projects.find(p=>p.scholarQuestion));
+    if(!saved?.reference?.noteId||saved.steps.length!==3||!saved.demonstrative)throw new Error('Ficha sem referência e etapas');
+    await page.click('#scholar-project');
+    if(await ev(()=>projects.filter(p=>p.scholarQuestion).length)!==1)throw new Error('Ficha duplicada');
+    await page.click('#scholar-jarvis');
+    if(!(await page.textContent('#scholar-status')).includes('configurada'))throw new Error('Ausência de IA não foi explicada');
+    await page.click('#scholar-map');
+    if(await ev(()=>activeTheory)!=='becker'||await page.locator('#scholar-dialog[open]').count())throw new Error('Lente não aplicada');
+    await ev(()=>{projects=projects.filter(p=>!p.scholarQuestion);renderProjects();persistProjects();scholarResult=null;activeTheory='';document.getElementById('theory-active').hidden=true;geo?.eachLayer(l=>geo.resetStyle(l))});
+    return 'Notas citadas; tema sem apoio e HTML tratados; ficha sem duplicação; conexão ao mapa.';
+  });
+  await passo("Biblioteca funciona no celular e narração tem ciclo controlado",async()=>{
+    await page.setViewportSize({width:390,height:844});await page.click('#scholar-open');
+    await page.click('[data-scholar="santos"]');
+    const voice=await ev(()=>{if(!('speechSynthesis'in window))return {supported:false};const old=speechSynthesis.speak,oldCancel=speechSynthesis.cancel;let heard='';speechSynthesis.speak=u=>{heard=u.text;u.onstart?.()};speechSynthesis.cancel=()=>{};readScholar();const active=document.getElementById('scholar-stage').classList.contains('is-reading');stopScholarVoice();const stopped=!document.getElementById('scholar-stage').classList.contains('is-reading');speechSynthesis.speak=old;speechSynthesis.cancel=oldCancel;return {supported:true,active,stopped,heard}});
+    if(voice.supported&&(!voice.active||!voice.stopped||!voice.heard.includes('Síntese da plataforma')))throw new Error('Narração sem identificação ou encerramento');
+    const dims=await ev(()=>{const d=document.getElementById('scholar-dialog');return {s:d.scrollWidth,c:d.clientWidth}});
+    if(dims.s>dims.c+2)throw new Error('Biblioteca transborda no celular');
+    await page.screenshot({path:`${OUT}/screens/${slug}-14-biblioteca-mobile.png`,fullPage:true});
+    await page.keyboard.press('Escape');
+    if(await page.locator('#scholar-dialog[open]').count())throw new Error('Escape não fecha biblioteca');
+    await page.setViewportSize({width:1400,height:850});await ev(()=>{scholarResult=null});
+    return '390px sem transbordamento; Escape fecha; reprodução e parada verificadas com voz simulada.';
+  });
+
   await passo("Caderno distingue notícias e preserva fontes após recarregar",async()=>{
     await page.click("#sources-open");await page.selectOption("#source-type","news");
     await page.fill("#source-title","Notícia demonstrativa de teste");await page.fill("#source-url","https://example.org/noticia-de-teste");

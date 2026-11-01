@@ -27,3 +27,10 @@ Nova interface escura: Sala de dependências como visão inicial e Território c
 Caderno de investigação: cadastre dados oficiais, literatura e notícias com título, URL HTTPS, data e nota. Fontes são salvas neste navegador; o sistema não lê nem verifica os links automaticamente. As últimas oito referências do caderno (notas limitadas a 500 caracteres) entram no contexto do Jarvis com identificação do tipo e proveniência. Notícias e anúncios não equivalem a obras executadas. A busca bibliográfica SciELO/Crossref continua disponível em Pesquisa acadêmica. Nenhum serviço pago foi acrescentado.
 
 A demonstração Literatura → mapa → projeto permite aplicar duas lentes: Milton Santos (paráfrase da sinopse pública da Edusp, sem leitura integral do livro) e Bertha Becker (Geopolítica da Amazônia, 2005, artigo aberto DOI 10.1590/S0103-40142005000100005). O destaque da Região Norte é apenas recorte de navegação, não delimitação da Amazônia Legal. Os projetos são interpretações demonstrativas da plataforma, não propostas dos autores. A ficha exportada guarda referência, objetivo, etapas e a condição de estudo sem viabilidade validada.
+
+
+## v11 — Biblioteca de autores
+
+Consultar autores abre retratos históricos com licença CC BY-SA 4.0 e créditos na interface. As respostas locais são correspondências temáticas em notas revisadas: sinopse editorial de A Natureza do Espaço (Edusp) e notas sobre Geopolítica da Amazônia (Becker, 2005). Não inclui obras completas, leitura automática de PDFs, imitação de voz ou personificação. A narração usa a voz sintética disponível no navegador. Retratos são carregados do Wikimedia; precisam de conexão.
+
+Consulta, mapa e fichas de investigação funcionam sem chave. Aprofundamento no Jarvis depende da conexão de IA já configurada pelo visitante; nenhum segredo do GitHub é publicado no site. A ficha inclui pergunta, referência, origem da nota e evidências a reunir; usa o centro atual do mapa como ponto de referência, sem indicar obra ou viabilidade.
