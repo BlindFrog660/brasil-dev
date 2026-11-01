@@ -2,8 +2,8 @@ name: Testar site
 
 on:
   push:
-    branches: [main, interface-laboratorio-v10, biblioteca-autores-v11]
-    paths: ["index.html", "tests/**", "scripts/**", "package.json", ".github/workflows/test.yml"]
+    branches: [main, interface-laboratorio-v10, biblioteca-autores-v11, segundo-cerebro-v12]
+    paths: ["index.html", "tests/**", "scripts/**", "vault/**", "package.json", ".github/workflows/test.yml"]
   workflow_dispatch:
     inputs:
       usar_gemini:

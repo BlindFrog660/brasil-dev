@@ -82,6 +82,65 @@ async function cenario(browser, nome, url, gem, slug) {
 
   await passo("Abrir a página", async () => { await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 }); });
 
+  await passo("Segundo cérebro usa notas, links e backlinks reais",async()=>{
+    if(!await page.locator('#knowledge-view').isVisible())throw new Error('Segundo cérebro não é a visão inicial');
+    await page.waitForSelector('#kg-graph .kg-node');
+    const base=await ev(()=>({n:kgNotes.length,links:kgEdges().length,missing:knowledgeSeed.flatMap(n=>kgLinks(n).filter(l=>!kgResolve(l.target))).length}));
+    if(base.n<43||base.links<30||base.missing)throw new Error('Base inicial incompleta ou com links quebrados');
+    await page.locator('#kg-list').getByRole('button',{name:'Milton Santos',exact:true}).click();
+    await page.locator('#kg-note').getByRole('button',{name:'A Natureza do Espaço',exact:true}).first().click();
+    if(!(await page.textContent('#kg-note')).includes('Mencionada por'))throw new Error('Backlinks ausentes');
+    await page.check('#kg-local');
+    if(await page.locator('#kg-graph .kg-node').count()>=base.n)throw new Error('Filtro local não restringe o grafo');
+    await page.uncheck('#kg-local');await page.fill('#kg-search','Bertha Becker');
+    if(!await page.locator('#kg-list').getByRole('button',{name:'Bertha Becker',exact:true}).isVisible())throw new Error('Busca não encontra autora');
+    await page.fill('#kg-search','');await page.click('#kg-zoom-in');
+    if(await ev(()=>kgScale)<=1)throw new Error('Zoom não altera enquadramento');
+    await page.click('#kg-reset');await page.locator('#kg-list').getByRole('button',{name:'Bertha Becker',exact:true}).click();
+    await page.evaluate(()=>window.scrollTo(0,200));await page.screenshot({path:`${OUT}/screens/${slug}-15-segundo-cerebro.png`,fullPage:true});
+    return `${base.n} notas; ${base.links} links; títulos resolvidos, backlinks, busca e zoom funcionando.`;
+  });
+  await passo("Markdown local persiste, preserva links e exporta ZIP válido",async()=>{
+    await page.click('#kg-new');await page.fill('#kg-edit-title','Investigação de teste');await page.fill('#kg-edit-body','# Investigação de teste\n\nPergunta relacionada a [[Brasil]] e [[Milton Santos]].\n\n<img src=x onerror=alert(1)>');await page.click('#kg-edit-form button');
+    if(await page.locator('#kg-note img').count())throw new Error('HTML da nota foi executado');
+    const persist=await ev(()=>JSON.parse(localStorage.getItem('brasil-knowledge-v1')).find(n=>n.title==='Investigação de teste'));
+    if(!persist||await ev(()=>knowledgeContext())!=='')throw new Error('Nota não salva ou enviada à IA sem seleção');
+    await page.reload({waitUntil:'domcontentloaded'});await page.waitForSelector('#kg-list button');
+    await page.locator('#kg-list').getByRole('button',{name:'Investigação de teste',exact:true}).click();
+    const roundtrip=await ev(()=>{const n=kgNotes.find(x=>x.path===kgSelected),p=kgParse(kgMarkdown(n),n.path);return p.body.trim()===n.body.trim()&&kgResolve('Brasil')&&kgLinks(p).length===2});
+    if(!roundtrip)throw new Error('Roundtrip Markdown perdeu conteúdo ou links');
+    const zip=await ev(async()=>{const b=kgZip([{path:'Brasil em Desenvolvimento/Teste.md',content:'# Teste\n\n[[Brasil]]'}]);return Array.from(new Uint8Array(await b.arrayBuffer()))});
+    fs.writeFileSync(`${OUT}/amostras/cofre-${slug}.zip`,Buffer.from(zip));
+    if(Buffer.from(zip).readUInt32LE(0)!==0x04034b50||Buffer.from(zip).readUInt32LE(zip.length-22)!==0x06054b50)throw new Error('ZIP inválido');
+    await page.click('#kg-connect');await page.setInputFiles('#kg-files',{name:'Ata.md',mimeType:'text/markdown',buffer:Buffer.from('---\ntitle: "Ata local"\ntype: "Nota"\n---\n\n# Ata local\n\nVer [[Brasil]].')});
+    await page.waitForFunction(()=>document.getElementById('kg-integration-status').textContent.includes('importadas'));
+    if(!await ev(()=>kgNotes.some(n=>n.title==='Ata local'&&n.visibility==='private-local')))throw new Error('Importação não marcada como local');
+    await page.click('#kg-integration-close');
+    return 'Notas locais restauradas; HTML inerte; Markdown com links preservado; ZIP gerado; importação privada.';
+  });
+  await passo("API Obsidian limita pasta, protege chave e cria sem sobrescrever",async()=>{
+    const requests=[];
+    await page.route('https://127.0.0.1:27124/**',async route=>{const r=route.request(),url=decodeURIComponent(r.url());requests.push({url,method:r.method(),headers:r.headers(),body:r.postData()});
+      if(r.method()==='OPTIONS')return route.fulfill({status:204,headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*','access-control-allow-methods':'GET,PUT,OPTIONS'}});
+      const headers={'access-control-allow-origin':'*'};
+      if(r.method()==='PUT')return route.fulfill({status:204,headers});
+      if(url.endsWith('/Brasil em Desenvolvimento/'))return route.fulfill({status:200,headers,contentType:'application/json',body:JSON.stringify({files:['API-teste.md']})});
+      return route.fulfill({status:200,headers,contentType:'text/markdown',body:'---\ntitle: "Nota API teste"\ntype: "Nota"\n---\n\n# Nota API teste\n\nLigação com [[Brasil]].'});
+    });
+    await page.click('#kg-connect');await page.fill('#kg-api-key','credencial-ficticia-e2e');await page.click('#kg-api-pull');
+    await page.waitForFunction(()=>document.getElementById('kg-integration-status').textContent.includes('notas lidas'));
+    if(!await ev(()=>kgNotes.some(n=>n.title==='Nota API teste')))throw new Error('API não importou nota');
+    await page.click('#kg-api-write');await page.waitForFunction(()=>document.getElementById('kg-integration-status').textContent.includes('Nova nota gravada'));
+    const writes=requests.filter(r=>r.method==='PUT');if(writes.length!==1||writes[0].headers['if-none-match']!=='*'||!writes[0].url.includes('/Brasil em Desenvolvimento/Entrada/'))throw new Error('Gravação sem precondição ou fora da pasta');
+    if(requests.some(r=>!r.url.includes('/vault/Brasil em Desenvolvimento/')))throw new Error('API leu fora da pasta');
+    if(await ev(()=>JSON.stringify(localStorage).includes('credencial-ficticia-e2e')||knowledgeContext().includes('credencial-ficticia-e2e')))throw new Error('Chave persistida ou no contexto da IA');
+    await page.click('#kg-integration-close');if(await page.inputValue('#kg-api-key'))throw new Error('Chave não foi apagada ao fechar');
+    await page.unroute('https://127.0.0.1:27124/**');
+    await ev(()=>{kgUserNotes=[];localStorage.removeItem('brasil-knowledge-v1');kgAISelection=null;rebuildKnowledge()});
+    await page.click('[data-workspace-view="network"]');
+    return 'API simulada: leitura limitada, importação local, criação sem overwrite e credencial apenas na sessão. Plugin real ainda depende da configuração local.';
+  });
+
   await passo("Sala de dependências integra seleção, cenário e território",async()=>{
     await page.waitForSelector("#dependency-network circle");
     if(!await page.locator("#network-view").isVisible())throw new Error("Sala de dependências não é a visão inicial");
