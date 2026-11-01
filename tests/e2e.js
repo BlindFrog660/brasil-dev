@@ -196,7 +196,7 @@ async function cenario(browser, nome, url, gem, slug) {
     await page.click("#toggle-evidence");if(!await page.locator("#evidence-list").isVisible())throw new Error("Evidências não abriram");
     await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:`${OUT}/screens/${slug}-0-sala-dependencias.png`,fullPage:true});await page.click("#pilot-in-map");
     if(!await page.locator("#map-view").isVisible()||await ev(()=>pilotMapLayer.getLayers().length)<5)throw new Error("Croqui não apareceu no território");
-    await page.uncheck("#layer-pilot");await ev(()=>map.setView([-14.2,-51.9],4));
+    await page.click("#clear-pilot");await ev(()=>map.setView([-14.2,-51.9],4));
     return "Rede selecionável, evidências, cenário hipotético e croqui no mapa funcionando.";
   });
 
