@@ -95,7 +95,7 @@ async function cenario(browser, nome, url, gem, slug) {
     const result=await ev(()=>Object.fromEntries([...sectorLayers].map(([k,l])=>[k,l.getLayers().length])));
     if(result.ferrovias!==52||result.portos!==248||result.aeroportos!==505)throw new Error('Cópias oficiais não carregaram completas');
     await page.selectOption('#analysis-mode','cartografia-oficial-brasil');
-    if(!(await ev(()=>analysisModeContext())).includes('distribuição'))throw new Error('Skill não entrou no método do Jarvis');
+    if(!(await ev(()=>analysisModeContext())).toLowerCase().includes('distribuição'))throw new Error('Skill não entrou no método do Jarvis');
     await page.selectOption('#analysis-mode','analisar-infraestrutura-brasil');
     return '9 seleções; composição múltipla; 52 trechos, 248 instalações portuárias e 505 aeroportos de fontes oficiais; 4 skills disponíveis.';
   });
