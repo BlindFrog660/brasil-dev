@@ -1,0 +1,4 @@
+interface:
+  display_name: "Curadoria do segundo cérebro"
+  short_description: "Conectar notas, referências e territórios no cofre."
+  default_prompt: "Use $curar-conhecimento-territorial para investigar o território selecionado com fontes verificáveis."

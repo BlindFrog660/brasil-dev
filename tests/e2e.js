@@ -47,6 +47,8 @@ async function todasSondas() {
 function servir() {
   return new Promise(res => {
     const srv = http.createServer((req, rsp) => {
+      if (req.url.split("?")[0] === "/data/snapshots.js") { rsp.writeHead(200, {"Content-Type":"application/javascript; charset=utf-8"});rsp.end(fs.readFileSync("data/snapshots.js"));return; }
+      if (/^\/data\/parts\/[a-z]+-\d+\.js$/.test(req.url)) { rsp.writeHead(200,{"Content-Type":"application/javascript; charset=utf-8"});rsp.end(fs.readFileSync("."+req.url));return; }
       if (req.url.split("?")[0] !== "/") { rsp.writeHead(404); rsp.end(); return; }
       rsp.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       rsp.end(fs.readFileSync("index.html"));
@@ -82,7 +84,49 @@ async function cenario(browser, nome, url, gem, slug) {
 
   await passo("Abrir a página", async () => { await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 }); });
 
+  await passo("Dashboard seleciona uma, várias ou todas as nove camadas",async()=>{
+    if(!await page.locator('#sector-controls').isVisible())throw new Error('Dashboard não é a visão inicial');
+    if(await page.locator('[data-sector]').count()!==9||await ev(()=>projectSkills.length)!==4)throw new Error('Camadas ou skills incompletas');
+    await page.click('#sector-all');if(await page.locator('[data-sector]:checked').count()!==9)throw new Error('Seleção total falhou');
+    await page.click('#sector-none');if(await ev(()=>sectorSelected.size||sectorLayers.size))throw new Error('Limpeza de camadas falhou');
+    for(const id of ['ferrovias','portos','aeroportos'])await page.check(`[data-sector="${id}"]`);
+    if(await ev(()=>sectorSelected.size)!==3)throw new Error('Seleção múltipla falhou');
+    await ev(async()=>{for(const id of ['ferrovias','portos','aeroportos'])await loadSector(sectorCatalog.find(d=>d.id===id),{full:true})});
+    const result=await ev(()=>Object.fromEntries([...sectorLayers].map(([k,l])=>[k,l.getLayers().length])));
+    if(result.ferrovias!==52||result.portos!==248||result.aeroportos!==505)throw new Error('Cópias oficiais não carregaram completas');
+    await page.selectOption('#analysis-mode','cartografia-oficial-brasil');
+    if(!(await ev(()=>analysisModeContext())).includes('distribuição'))throw new Error('Skill não entrou no método do Jarvis');
+    await page.selectOption('#analysis-mode','analisar-infraestrutura-brasil');
+    return '9 seleções; composição múltipla; 52 trechos, 248 instalações portuárias e 505 aeroportos de fontes oficiais; 4 skills disponíveis.';
+  });
+  await passo("Pergunta sobre Norte–Sul desenha traçado e abre histórico documentado",async()=>{
+    await page.fill('#q','Mostre a Ferrovia Norte-Sul no mapa');await page.click('#cf button');
+    await page.waitForFunction(()=>!busy&&sectorLayers.get('ferrovias')?.getLayers().length===52);
+    const trace=await ev(()=>{const fs=sectorLayers.get('ferrovias').toGeoJSON().features;let pts=0;const walk=c=>{if(typeof c[0]==='number')pts++;else c.forEach(walk)};fs.forEach(f=>walk(f.geometry.coordinates));const r=sectorLayers.get('ferrovias').getLayers().find(l=>l.feature.properties.vhr_ferrov==='RMC');r.fire('click');return {pts,types:[...new Set(fs.map(f=>f.geometry.type))]}});
+    if(trace.pts<1000||trace.types.some(t=>!t.includes('LineString')))throw new Error('Traçado foi substituído por pontos ou retas');
+    const dossier=await page.textContent('#asset-inspector');if(!dossier.includes('1.537')||!dossier.includes('31/07/2019')||!dossier.includes('1987'))throw new Error('Dossiê não contém histórico, extensão e recorte');
+    await page.locator('#asset-inspector').getByRole('button',{name:'Salvar nota no cofre'}).click();
+    if(!await ev(()=>kgUserNotes.some(n=>n.path.startsWith('Ativos/ferrovias-')&&n.source.includes('infrasa'))))throw new Error('Ativo não foi ligado ao cofre com fonte');
+    await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:`${OUT}/screens/${slug}-16-dashboard.png`,fullPage:true});
+    return `${trace.pts} vértices oficiais; histórico e extensão contratual delimitados; nota vinculada ao cofre.`;
+  });
+  await passo("Distribuição é regional e produção é agregada, sem falsa precisão",async()=>{
+    const r=await ev(async()=>{const d=await unpackSector('distribution');return {n:d.features.length,entities:[...new Set(d.features.map(f=>f.properties.entidade))],kinds:[...new Set(d.features.map(f=>f.geometry.type))]}});
+    if(r.n!==12254||r.entities.some(e=>!['SSDMT','SSDBT','SSDAT'].includes(e))||r.kinds.some(t=>!t.includes('LineString')))throw new Error('Distribuição contém dado errado ou unidade consumidora');
+    const prod=await ev(()=>territorialSnapshots.production);if(prod.referenceYear!==2021||prod.records.length!==27||prod.variables.industria!==517)throw new Error('Produção sem recorte ou variável correta');
+    await page.waitForFunction(()=>!!geo,{timeout:20000});
+    await ev(async()=>{sectorSelected.add('agro');sectorSelected.add('industria');sectorSelected.add('transportadoras');await loadSector(sectorCatalog.find(d=>d.id==='agro'));await loadSector(sectorCatalog.find(d=>d.id==='industria'));await loadSector(sectorCatalog.find(d=>d.id==='transportadoras'))});
+    if(await ev(()=>sectorLayers.get('industria').getLayers().length)!==27)throw new Error('Indústria não usou regiões');
+    if(await ev(()=>sectorStates.get('transportadoras').state)!=='error')throw new Error('Transportadoras indisponíveis foram apresentadas como disponíveis');
+    await page.setViewportSize({width:390,height:844});
+    if(!await ev(()=>document.documentElement.scrollWidth<=innerWidth))throw new Error('Dashboard transborda no celular');
+    await page.screenshot({path:`${OUT}/screens/${slug}-17-dashboard-mobile.png`,fullPage:true});await page.setViewportSize({width:1400,height:850});
+    await page.click('#sector-none');await ev(()=>{kgUserNotes=[];localStorage.removeItem('brasil-knowledge-v1');kgAISelection=null;sectorAIAsset=null;rebuildKnowledge()});
+    return '12.254 segmentos regionais de distribuição; agro/indústria estaduais de 2021; fonte indisponível explícita; celular sem transbordamento.';
+  });
+
   await passo("Segundo cérebro usa notas, links e backlinks reais",async()=>{
+    await page.click('[data-workspace-view="knowledge"]');
     if(!await page.locator('#knowledge-view').isVisible())throw new Error('Segundo cérebro não é a visão inicial');
     await page.waitForSelector('#kg-graph .kg-node');
     const base=await ev(()=>({n:kgNotes.length,links:kgEdges().length,missing:knowledgeSeed.flatMap(n=>kgLinks(n).filter(l=>!kgResolve(l.target))).length}));

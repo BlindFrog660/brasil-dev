@@ -1,0 +1,4 @@
+interface:
+  display_name: "Análise de infraestrutura"
+  short_description: "Investigar gargalos com fontes e recorte territorial."
+  default_prompt: "Use $analisar-infraestrutura-brasil para investigar o território selecionado com fontes verificáveis."

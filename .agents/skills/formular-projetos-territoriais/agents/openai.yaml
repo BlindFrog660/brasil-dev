@@ -1,0 +1,4 @@
+interface:
+  display_name: "Projetos fundamentados"
+  short_description: "Transformar uma investigação em alternativas de projeto."
+  default_prompt: "Use $formular-projetos-territoriais para investigar o território selecionado com fontes verificáveis."

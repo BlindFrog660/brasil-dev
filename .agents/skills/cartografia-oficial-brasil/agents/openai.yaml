@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cartografia oficial"
+  short_description: "Representar ativos com geometria e metadados oficiais."
+  default_prompt: "Use $cartografia-oficial-brasil para investigar o território selecionado com fontes verificáveis."

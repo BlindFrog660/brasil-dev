@@ -34,3 +34,12 @@ A demonstração Literatura → mapa → projeto permite aplicar duas lentes: Mi
 Consultar autores abre retratos históricos com licença CC BY-SA 4.0 e créditos na interface. As respostas locais são correspondências temáticas em notas revisadas: sinopse editorial de A Natureza do Espaço (Edusp) e notas sobre Geopolítica da Amazônia (Becker, 2005). Não inclui obras completas, leitura automática de PDFs, imitação de voz ou personificação. A narração usa a voz sintética disponível no navegador. Retratos são carregados do Wikimedia; precisam de conexão.
 
 Consulta, mapa e fichas de investigação funcionam sem chave. Aprofundamento no Jarvis depende da conexão de IA já configurada pelo visitante; nenhum segredo do GitHub é publicado no site. A ficha inclui pergunta, referência, origem da nota e evidências a reunir; usa o centro atual do mapa como ponto de referência, sem indicar obra ou viabilidade.
+
+
+## v13 — Dashboard multissetorial
+
+Visão inicial com seleção de nove categorias, camadas oficiais, ficha por elemento e modos de investigação baseados nas quatro skills em .agents/skills. Segundo cérebro e biblioteca ficam em áreas próprias. Dados e limites em data/README.md.
+
+Disponíveis: Norte–Sul incorporada e outras ferrovias por consulta à base, 248 instalações portuárias, 505 aeroportos, rodovias federais e usinas por área, distribuição regional Ceral Araruama (12.254 segmentos, referência 2023) e VAB agro/industrial estadual de 2021. Transportadoras permanece explicitamente sem dados carregados por indisponibilidade da fonte RNTRC. Não há alegação de inventário completo, endereços de fábricas/fazendas ou cobertura nacional de distribuição.
+
+Perguntas visuais sobre a Norte–Sul usam a geometria oficial e o histórico documentado. BRs são consultadas no SNV. Nomes de portos e aeroportos são procurados nas cópias oficiais. As demais perguntas usam o Jarvis, quando conectado, com método, fontes e limites. Skills são instruções, não conectores ou acesso automático ao Obsidian.
