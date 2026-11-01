@@ -86,7 +86,7 @@ async function cenario(browser, nome, url, gem, slug) {
 
   await passo("Dashboard seleciona uma, várias ou todas as nove camadas",async()=>{
     if(!await page.locator('#sector-controls').isVisible())throw new Error('Dashboard não é a visão inicial');
-    if(await page.locator('[data-sector]').count()!==9||await ev(()=>projectSkills.length)!==4)throw new Error('Camadas ou skills incompletas');
+    if(await page.locator('[data-sector]').count()!==9||await ev(()=>projectSkills.length)!==4||await ev(()=>kgNotes.filter(n=>n.path.startsWith('Camadas/')).length)!==9)throw new Error('Camadas ou skills incompletas');
     await page.click('#sector-all');if(await page.locator('[data-sector]:checked').count()!==9)throw new Error('Seleção total falhou');
     await page.click('#sector-none');if(await ev(()=>sectorSelected.size||sectorLayers.size))throw new Error('Limpeza de camadas falhou');
     for(const id of ['ferrovias','portos','aeroportos'])await page.check(`[data-sector="${id}"]`);
