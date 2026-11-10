@@ -172,7 +172,7 @@ function mapTag(raw,move){
 
 
 /* ENERGY_DATA_START */
-const energyData={"source":"https://ons-aws-prod-opendata.s3.amazonaws.com/dataset/intercambio_internacional_ho/INTERCAMBIO_INTERNACIONAL_2026.csv","retrievedAt":"2026-11-09T19:57:13.209Z","unit":"MWmed","records":[{"country":"Argentina","time":"2026-11-08 23:00:00","value":0},{"country":"Uruguai","time":"2026-11-08 23:00:00","value":0}]};
+const energyData={"source":"https://ons-aws-prod-opendata.s3.amazonaws.com/dataset/intercambio_internacional_ho/INTERCAMBIO_INTERNACIONAL_2026.csv","retrievedAt":"2026-11-10T17:12:46.241Z","unit":"MWmed","records":[{"country":"Argentina","time":"2026-11-09 23:00:00","value":0},{"country":"Uruguai","time":"2026-11-09 23:00:00","value":0}]};
 /* ENERGY_DATA_END */
 function energyContext(){return "Intercâmbio internacional ONS (MWmed, fluxo medido; não é capacidade instalada nem geração de Itaipu): "+energyData.records.map(r=>r.country+": "+r.value+" MWmed em "+r.time).join("; ")+". Fonte: "+energyData.source+". Os sinais são os publicados pela ONS; não deduza importação ou exportação sem consultar o dicionário. ";}
 function loadEnergy(){
